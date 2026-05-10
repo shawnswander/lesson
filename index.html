@@ -1,0 +1,3761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Lesson Cockpit</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      overflow: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Start Screen */
+    #startScreen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+      gap: 24px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .title {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #6e6e73;
+      margin-bottom: 32px;
+    }
+
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .class-btn {
+      padding: 24px;
+      border: 1px solid #d2d2d7;
+      border-radius: 18px;
+      background: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    .class-btn-label {
+      display: inline-block;
+      white-space: pre-wrap;
+      line-height: 1.25;
+    }
+
+    .class-btn-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ff9500;
+      color: white;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+      pointer-events: none;
+    }
+
+    .class-btn:hover {
+      border-color: #a0a0a5;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: scale(1.02);
+    }
+
+    .class-btn:active {
+      transform: scale(0.98);
+    }
+
+    .class-btn-assigned {
+      background: #34c759 !important;
+      color: white !important;
+      border-color: #34c759 !important;
+    }
+
+    .class-btn-assigned:hover {
+      border-color: #2fa846 !important;
+      background: #2fa846 !important;
+      box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3) !important;
+    }
+
+    .pdf-input-wrapper {
+      margin-top: 16px;
+    }
+
+    .pdf-input-label {
+      display: inline-block;
+      padding: 12px 20px;
+      background: #007AFF;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .pdf-input-label:hover {
+      background: #0056b3;
+    }
+
+    #pdfInput {
+      display: none;
+    }
+
+    /* Lesson Page */
+    #lessonPage {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    .lesson-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #d2d2d7;
+      z-index: 100;
+      max-height: 84px;
+      opacity: 1;
+      overflow: hidden;
+      transition: max-height 0.22s ease, opacity 0.22s ease, padding 0.22s ease, border-color 0.22s ease;
+    }
+
+    .lesson-header-left {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .lesson-header-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      min-width: 210px;
+    }
+
+    .lesson-hour {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1d1d1f;
+    }
+
+    .lesson-class {
+      font-size: 13px;
+      color: #6e6e73;
+      font-weight: 600;
+    }
+
+    .return-btn {
+      padding: 8px 16px;
+      background: #e8e8ed;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .return-btn:hover {
+      background: #d2d2d7;
+    }
+
+    .class-title {
+      font-size: 20px;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+      margin: 0;
+    }
+
+    #lessonPage.presentation-mode .lesson-header {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-bottom-color: transparent;
+      pointer-events: none;
+    }
+
+    .pdf-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      background: #e8e8ed;
+    }
+
+    .lesson-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .pdf-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .markdown-viewer {
+      position: absolute;
+      inset: 0;
+      background: #f7f7f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 48px 28px;
+      overflow: hidden;
+    }
+
+    .markdown-slide {
+      width: 100%;
+      height: 100%;
+      max-width: 1100px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+      padding: clamp(24px, 5vw, 56px);
+      color: #1d1d1f;
+      line-height: 1.5;
+      font-size: clamp(18px, 2.4vw, 30px);
+    }
+
+    .markdown-slide h1,
+    .markdown-slide h2,
+    .markdown-slide h3,
+    .markdown-slide h4 {
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      margin-top: 0.4em;
+      margin-bottom: 0.35em;
+    }
+
+    .markdown-slide h1 { font-size: 1.9em; }
+    .markdown-slide h2 { font-size: 1.5em; }
+    .markdown-slide h3 { font-size: 1.25em; }
+
+    .markdown-slide p,
+    .markdown-slide ul,
+    .markdown-slide ol,
+    .markdown-slide blockquote,
+    .markdown-slide table,
+    .markdown-slide pre {
+      margin-top: 0.4em;
+      margin-bottom: 0.65em;
+    }
+
+    .markdown-slide blockquote {
+      border-left: 4px solid #007AFF;
+      margin-left: 0;
+      padding-left: 14px;
+      color: #4a4a4f;
+    }
+
+    .markdown-slide code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: #f3f4f6;
+      border-radius: 6px;
+      padding: 0.12em 0.34em;
+      font-size: 0.9em;
+    }
+
+    .markdown-slide pre code {
+      display: block;
+      padding: 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      line-height: 1.45;
+    }
+
+    .markdown-slide hr {
+      border: 0;
+      border-top: 1px solid #d2d2d7;
+      margin: 1.2em 0;
+    }
+
+    .markdown-slide img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+    }
+
+    .markdown-slide table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85em;
+    }
+
+    .markdown-slide th,
+    .markdown-slide td {
+      border: 1px solid #e4e4e7;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    .markdown-slide th {
+      background: #f8f8fb;
+      font-weight: 700;
+    }
+
+    .markdown-slide-indicator {
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #6e6e73;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .annotation-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 130;
+      pointer-events: none;
+      touch-action: auto;
+      background: transparent;
+    }
+
+    .annotation-canvas.annotation-active {
+      pointer-events: auto;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .annotation-toolbar {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 140;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(210, 210, 215, 0.9);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+      opacity: 0.45;
+      transition: opacity 0.18s ease;
+      pointer-events: auto;
+    }
+
+    .annotation-toolbar:hover,
+    .annotation-toolbar.active {
+      opacity: 1;
+    }
+
+    .annotation-btn {
+      min-width: 38px;
+      min-height: 34px;
+      border-radius: 10px;
+      border: 1px solid #d2d2d7;
+      background: white;
+      color: #1d1d1f;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 8px;
+      text-align: center;
+    }
+
+    .annotation-btn.active {
+      border-color: #007AFF;
+      box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+    }
+
+    .annotation-btn.mode-on {
+      background: #34c759;
+      color: white;
+      border-color: #2fa846;
+    }
+
+    .annotation-divider {
+      height: 1px;
+      background: #d2d2d7;
+      margin: 2px 0;
+    }
+
+    .annotation-color-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .annotation-color-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 2px solid white;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      padding: 0;
+      min-width: 22px;
+      min-height: 22px;
+    }
+
+    .annotation-color-btn.active {
+      box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.8);
+    }
+
+    .floating-controls {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 120;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    #lessonPage.presentation-mode .floating-controls {
+      opacity: 0.5;
+      pointer-events: auto;
+    }
+
+    #lessonPage.presentation-mode .floating-controls:hover,
+    #lessonPage.presentation-mode .floating-controls.active {
+      opacity: 1;
+    }
+
+    .floating-control-btn {
+      width: 50px;
+      min-height: 50px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(29, 29, 31, 0.68);
+      color: white;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      text-align: center;
+      transition: transform 0.16s ease, background 0.16s ease;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .floating-control-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(29, 29, 31, 0.84);
+    }
+
+    .floating-control-icon {
+      line-height: 1;
+      transform: translateY(-1px);
+    }
+
+    /* Hidden Log Hotspot */
+    .log-hotspot {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      opacity: 0.1;
+      transition: opacity 0.3s ease;
+      z-index: 50;
+    }
+
+    .log-hotspot:hover,
+    .log-hotspot.active {
+      opacity: 1;
+    }
+
+    .log-hotspot-indicator {
+      width: 100%;
+      height: 100%;
+      background: #007AFF;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    /* Floating Log Panel */
+    .log-panel {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
+      display: none;
+      flex-direction: column;
+      z-index: 200;
+      overflow-y: auto;
+    }
+
+    .log-panel.open {
+      display: flex;
+    }
+
+    .log-panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e8e8ed;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .log-panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .close-log-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #6e6e73;
+    }
+
+    .log-panel-content {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .log-section {
+      margin-bottom: 24px;
+    }
+
+    .log-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #6e6e73;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .behavior-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .behavior-btn {
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .behavior-btn.positive:hover {
+      border-color: #34c759;
+      background: #f0fdf4;
+      color: #15803d;
+    }
+
+    .behavior-btn.negative:hover {
+      border-color: #ff3b30;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .student-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .student-btn {
+      padding: 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .student-btn:hover {
+      border-color: #007AFF;
+      background: #f0f8ff;
+      color: #007AFF;
+    }
+
+    .view-log-btn {
+      padding: 12px 16px;
+      background: #e8e8ed;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+
+    .view-log-btn:hover {
+      background: #d2d2d7;
+    }
+
+    /* Log Viewer Modal */
+    .log-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 300;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .log-modal.open {
+      display: flex;
+    }
+
+    .markdown-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 700;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .markdown-modal.open {
+      display: flex;
+    }
+
+    .markdown-modal-content {
+      width: min(920px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+    }
+
+    .markdown-modal-title {
+      margin: 0 0 12px 0;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .markdown-modal-field {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 10px;
+      font-family: inherit;
+    }
+
+    .markdown-modal-textarea {
+      width: 100%;
+      min-height: 320px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      margin-bottom: 12px;
+    }
+
+    .log-modal-content {
+      background: white;
+      border-radius: 20px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .log-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .log-modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .close-modal-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      color: #6e6e73;
+    }
+
+    .log-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .log-entry {
+      padding: 12px;
+      border: 1px solid #e8e8ed;
+      border-radius: 10px;
+      font-size: 13px;
+      background: #f9f9fb;
+    }
+
+    .log-entry-time {
+      color: #6e6e73;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .log-entry-positive {
+      border-left: 4px solid #34c759;
+      background: #f0fdf4;
+    }
+
+    .log-entry-negative {
+      border-left: 4px solid #ff3b30;
+      background: #fef2f2;
+    }
+
+    .log-entry-name {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .log-entry-category {
+      color: #6e6e73;
+    }
+
+    .empty-log {
+      text-align: center;
+      color: #6e6e73;
+      padding: 32px 20px;
+      font-size: 14px;
+    }
+
+    /* Cold Call Overlay */
+    .cold-call-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 400;
+      animation: fadeInColdCall 0.3s ease-in;
+    }
+
+    .cold-call-overlay.show {
+      display: flex;
+    }
+
+    .cold-call-overlay.fade-out {
+      animation: fadeOutColdCall 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeInColdCall {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOutColdCall {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    .cold-call-name {
+      font-size: 96px;
+      font-weight: 700;
+      color: white;
+      text-align: center;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .cold-call-btn {
+      padding: 8px 16px;
+      background: #ff9500;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cold-call-btn:hover {
+      background: #ff8c00;
+    }
+
+    /* Admin Panel */
+    #adminScreen {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+      overflow-y: auto;
+      gap: 24px;
+    }
+
+    .admin-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .admin-section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .admin-back-btn {
+      padding: 12px 24px;
+      background: #e8e8ed;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .admin-back-btn:hover {
+      background: #d2d2d7;
+    }
+
+    .class-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .class-editor-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .class-editor-item input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .class-editor-item button {
+      padding: 10px 12px;
+      background: #ff3b30;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .class-editor-item button:hover {
+      background: #e63326;
+    }
+
+    .add-class-btn {
+      padding: 12px 16px;
+      background: #007AFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+    }
+
+    .add-class-btn:hover {
+      background: #0056b3;
+    }
+
+    .student-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .student-editor-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .student-editor-item input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .student-editor-item button {
+      padding: 10px 12px;
+      background: #ff3b30;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .student-editor-item button:hover {
+      background: #e63326;
+    }
+
+    .add-student-btn {
+      padding: 12px 16px;
+      background: #007AFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+    }
+
+    .add-student-btn:hover {
+      background: #0056b3;
+    }
+
+    .admin-textarea {
+      width: 100%;
+      min-height: 180px;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      resize: vertical;
+      background: #fff;
+      color: #1d1d1f;
+    }
+
+    .class-selector {
+      margin-bottom: 16px;
+    }
+
+    .class-selector select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    /* Behavior Report */
+    #reportScreen {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+      overflow-y: auto;
+      gap: 16px;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .report-filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .report-filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .report-filter-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6e6e73;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .report-filter-input,
+    .report-filter-select {
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .report-filter-select {
+      cursor: pointer;
+    }
+
+    .report-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #6e6e73;
+      font-weight: 600;
+    }
+
+    .behavior-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .behavior-entry-report {
+      display: grid;
+      grid-template-columns: 150px 1fr 130px 1fr 150px 100px;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e8e8ed;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .behavior-entry-date {
+      color: #6e6e73;
+      font-weight: 600;
+    }
+
+    .behavior-entry-student {
+      font-weight: 600;
+    }
+
+    .behavior-entry-class {
+      color: #6e6e73;
+    }
+
+    .behavior-entry-hour {
+      color: #6e6e73;
+      font-weight: 600;
+    }
+
+    .behavior-entry-category {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .behavior-positive {
+      background: #f0fdf4;
+      color: #15803d;
+    }
+
+    .behavior-negative {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .behavior-type {
+      font-size: 12px;
+      color: #6e6e73;
+      text-transform: uppercase;
+    }
+
+    .report-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6e6e73;
+    }
+
+    .report-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .export-btn {
+      padding: 10px 16px;
+      background: #34c759;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .export-btn:hover {
+      background: #2fa846;
+    }
+
+    .sound-status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    .pdf-order-panel {
+      margin-top: 12px;
+      border-top: 1px solid #e8e8ed;
+      padding-top: 12px;
+    }
+
+    .pdf-order-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .pdf-order-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid #e8e8ed;
+      border-radius: 8px;
+      background: #f9f9fb;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pdf-order-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .pdf-order-controls {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .pdf-order-btn {
+      padding: 4px 8px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .positive-banner {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: rgba(52, 199, 89, 0.96);
+      color: white;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 550;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      max-width: 90vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .positive-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 600px) {
+      .class-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .behavior-options {
+        grid-template-columns: 1fr;
+      }
+
+      .log-panel {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <button class="admin-back-btn" onclick="openAdminPanel()" style="align-self: flex-end; margin-top: 0; margin-bottom: 0;">Admin</button>
+    <h1 class="title">Lesson Cockpit</h1>
+    <p class="subtitle">Select an hour to begin</p>
+    <div class="class-grid" id="classGrid"></div>
+    <div class="pdf-input-wrapper" id="pdfWrapper" style="display: none;">
+      <label class="pdf-input-label">
+        Choose PDF Lesson
+        <input type="file" id="pdfInput" accept=".pdf" multiple />
+      </label>
+    </div>
+    <input type="file" id="markdownFileInput" accept=".md,text/markdown,text/plain" multiple style="display: none;" />
+    <div class="admin-section" style="width: 100%; max-width: 900px; padding: 16px 20px;">
+      <div class="admin-section-title" style="font-size: 18px; margin-bottom: 10px;">Lesson Storage</div>
+      <div class="class-selector" style="margin-bottom: 10px;">
+        <label style="font-size: 14px; font-weight: 600; display: block; margin-bottom: 8px;">Select Class:</label>
+        <select id="pdfClassSelect" onchange="onPdfClassSelectionChanged()">
+          <option value="">-- Select a Class --</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button id="addPdfToClassBtn" class="add-class-btn" onclick="addPdfToSelectedClass()">Add PDF</button>
+        <button id="addMarkdownFileBtn" class="add-class-btn" onclick="addMarkdownFileToSelectedClass()" style="background: #5856d6;">Add Markdown File</button>
+        <button id="pasteMarkdownBtn" class="add-class-btn" onclick="openMarkdownPasteModal()" style="background: #5856d6;">Paste Markdown Lesson</button>
+        <button id="reorderPdfsBtn" class="add-class-btn" onclick="openPdfReorderPanel()" style="background: #ff9500;">Reorder Lessons</button>
+        <button id="clearSelectedPdfBtn" class="add-class-btn" onclick="clearSelectedPdf()" style="background: #ff3b30;">Clear Selected Lesson</button>
+        <button id="clearAllPdfsBtn" class="add-class-btn" onclick="clearAllPdfs()" style="background: #ff3b30;">Clear All Lessons</button>
+      </div>
+      <div class="sound-status" id="pdfStorageStatus">No stored lessons found.</div>
+      <div id="pdfOrderPanel" class="pdf-order-panel hidden">
+        <div class="sound-status" id="pdfOrderHelp" style="margin-top: 0; margin-bottom: 8px;">Move lessons up/down, then save.</div>
+        <div id="pdfOrderList" class="pdf-order-list"></div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="add-class-btn" onclick="savePdfOrder()">Save Order</button>
+          <button class="add-class-btn" onclick="closePdfReorderPanel()" style="background: #8e8e93;">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup Screen -->
+  <div id="setupScreen" class="hidden" style="padding: 24px; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto;">
+    <h1 class="title">Configure Hours</h1>
+    <p class="subtitle" style="margin-bottom: 24px;">Assign each hour to a class (first time setup)</p>
+    <div id="setupGrid" style="width: 100%; max-width: 600px; margin-bottom: 24px;"></div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+      <button class="return-btn" onclick="finishSetup()" style="padding: 12px 24px; background: #007AFF; color: white; font-size: 16px;">Done</button>
+      <button class="return-btn" onclick="clearSetup()" style="padding: 12px 24px; font-size: 16px;">Clear Setup</button>
+    </div>
+  </div>
+
+  <!-- Admin Screen -->
+  <div id="adminScreen" class="hidden">
+    <button class="admin-back-btn" onclick="returnToStart()">← Back to Lessons</button>
+    
+    <div class="admin-section">
+      <div class="admin-section-title">Manage Classes</div>
+      <div class="sound-status" style="margin-top: 0; margin-bottom: 8px;">One class name per line.</div>
+      <textarea id="classListTextarea" class="admin-textarea" placeholder="Physical Science&#10;Physics&#10;AP Physics"></textarea>
+      <div style="margin-top: 10px;">
+        <button class="add-class-btn" onclick="saveClassList()">Save Class List</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">Hour to Class Mapping</div>
+      <div id="adminHourMappingEditor"></div>
+      <div class="sound-status">Changes are saved automatically.</div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">Manage Students</div>
+      <div class="class-selector">
+        <label style="font-size: 14px; font-weight: 600; display: block; margin-bottom: 8px;">Select Hour:</label>
+        <select id="studentClassSelect" onchange="updateStudentEditor()">
+          <option value="">-- Select an Hour --</option>
+        </select>
+      </div>
+      <div class="sound-status" style="margin-top: 0; margin-bottom: 8px;">One student name per line for the selected hour.</div>
+      <textarea id="studentListTextarea" class="admin-textarea" placeholder="Alice&#10;Bob&#10;Charlie"></textarea>
+      <div style="margin-top: 10px;">
+        <button class="add-student-btn" id="saveStudentsBtn" onclick="saveStudentsForHour()">Save Students for Hour</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">Reports</div>
+      <button class="add-class-btn" onclick="openBehaviorReport()" style="background: #34c759;">View Behavior Report</button>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">Positive Feedback Sound</div>
+      <input type="file" id="positiveSoundInput" accept="audio/*" style="margin-bottom: 10px;" />
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="add-class-btn" onclick="previewPositiveSound()">Preview</button>
+        <button class="add-class-btn" onclick="clearPositiveSound()" style="background: #ff3b30;">Clear Sound</button>
+      </div>
+      <div class="sound-status" id="soundStatus">No custom sound selected.</div>
+    </div>
+  </div>
+
+  <!-- Behavior Report Screen -->
+  <div id="reportScreen" class="hidden">
+    <div class="report-header">
+      <h1 class="title" style="margin: 0;">Behavior Report</h1>
+      <button class="admin-back-btn" onclick="returnToStart()">← Back</button>
+    </div>
+
+    <div class="report-filters">
+      <div class="report-filter-group">
+        <label class="report-filter-label">Date From</label>
+        <input type="date" id="filterDateFrom" class="report-filter-input" onchange="updateBehaviorReport()">
+      </div>
+      <div class="report-filter-group">
+        <label class="report-filter-label">Date To</label>
+        <input type="date" id="filterDateTo" class="report-filter-input" onchange="updateBehaviorReport()">
+      </div>
+      <div class="report-filter-group">
+        <label class="report-filter-label">Class</label>
+        <select id="filterClass" class="report-filter-select" onchange="updateBehaviorReport()">
+          <option value="">All Classes</option>
+        </select>
+      </div>
+      <div class="report-filter-group">
+        <label class="report-filter-label">Student</label>
+        <input type="text" id="filterStudent" class="report-filter-input" placeholder="Search student..." onchange="updateBehaviorReport()">
+      </div>
+      <div class="report-filter-group">
+        <label class="report-filter-label">Behavior Type</label>
+        <select id="filterType" class="report-filter-select" onchange="updateBehaviorReport()">
+          <option value="">All Types</option>
+          <option value="positive">Positive</option>
+          <option value="negative">Negative</option>
+        </select>
+      </div>
+      <div class="report-filter-group" style="align-self: flex-end;">
+        <button class="export-btn" onclick="exportBehaviorReport()">📥 Export CSV</button>
+        <button class="export-btn" onclick="clearAllBehaviors()" style="background: #ff3b30; margin-left: 8px;">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <div class="report-stats" id="reportStats"></div>
+
+    <div class="behavior-entries" id="behaviorEntries"></div>
+  </div>
+  <!-- Lesson Page -->
+  <div id="lessonPage" class="hidden">
+    <div class="lesson-header">
+      <div class="lesson-header-left">
+        <button class="return-btn" onclick="returnToStart()">← Back</button>
+        <button class="return-btn" id="prevPdfBtn" onclick="showPreviousPdf()">◀ Prev</button>
+        <button class="return-btn" id="nextPdfBtn" onclick="showNextPdf()">Next ▶</button>
+        <button class="return-btn" onclick="triggerColdCall()">Cold Call</button>
+        <button class="return-btn" onclick="openLogPanel()">Log</button>
+        <button class="return-btn" onclick="hideControls()">Hide Controls</button>
+      </div>
+      <div class="lesson-header-info">
+        <div class="lesson-hour" id="lessonHourName"></div>
+        <div class="lesson-class" id="lessonClassName"></div>
+        <div class="lesson-class" id="lessonPdfInfo"></div>
+      </div>
+    </div>
+    <div class="pdf-container">
+      <div class="lesson-layer" id="lessonLayer">
+        <iframe id="pdfViewer"></iframe>
+        <div id="markdownViewer" class="markdown-viewer hidden">
+          <div id="markdownSlide" class="markdown-slide"></div>
+          <div id="markdownSlideIndicator" class="markdown-slide-indicator"></div>
+        </div>
+      </div>
+      <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+      <div id="annotationToolbar" class="annotation-toolbar">
+        <button id="annotationModeBtn" class="annotation-btn" onclick="toggleAnnotationMode()">Annotation OFF</button>
+        <div class="annotation-divider"></div>
+        <button id="annotationPenBtn" class="annotation-btn" onclick="setAnnotationTool('pen')">Pen</button>
+        <button id="annotationHighlighterBtn" class="annotation-btn" onclick="setAnnotationTool('highlighter')">HL</button>
+        <button id="annotationEraserBtn" class="annotation-btn" onclick="setAnnotationTool('eraser')">Eraser</button>
+        <div class="annotation-color-row">
+          <button id="annotationColorRed" class="annotation-color-btn" style="background: #ff3b30;" onclick="setAnnotationColor('#ff3b30')" aria-label="Red pen"></button>
+          <button id="annotationColorBlue" class="annotation-color-btn" style="background: #007AFF;" onclick="setAnnotationColor('#007AFF')" aria-label="Blue pen"></button>
+          <button id="annotationColorBlack" class="annotation-color-btn" style="background: #1d1d1f;" onclick="setAnnotationColor('#1d1d1f')" aria-label="Black pen"></button>
+        </div>
+        <div class="annotation-divider"></div>
+        <button class="annotation-btn" onclick="undoAnnotation()">Undo</button>
+        <button class="annotation-btn" onclick="clearAnnotations(false)">Clear</button>
+      </div>
+      <div class="floating-controls" id="floatingControls" ontouchstart="activateFloatingControls()">
+        <button class="floating-control-btn" onclick="showPreviousPdf()" title="Previous" aria-label="Previous"><span class="floating-control-icon">◀</span></button>
+        <button class="floating-control-btn" onclick="showNextPdf()" title="Next" aria-label="Next"><span class="floating-control-icon">▶</span></button>
+        <button class="floating-control-btn" onclick="triggerColdCall()" title="Cold Call" aria-label="Cold Call"><span class="floating-control-icon">🎲</span></button>
+        <button class="floating-control-btn" onclick="openLogPanel()" title="Log" aria-label="Log"><span class="floating-control-icon">＋</span></button>
+        <button class="floating-control-btn" onclick="showControls()" title="Show Controls" aria-label="Show Controls"><span class="floating-control-icon">👁</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Log Panel -->
+  <div class="log-panel" id="logPanel">
+    <div class="log-panel-header">
+      <h2 class="log-panel-title">Log Behavior</h2>
+      <button class="close-log-btn" onclick="closeLogPanel()">✕</button>
+    </div>
+    <div class="log-panel-content">
+      <div id="behaviorSelector">
+        <div class="log-section">
+          <div class="log-section-title">Positive</div>
+          <div class="behavior-options">
+            <button class="behavior-btn positive" onclick="selectBehavior('positive', 'Participation')">Participation</button>
+            <button class="behavior-btn positive" onclick="selectBehavior('positive', 'Devotion')">Devotion</button>
+          </div>
+          <input type="text" id="positiveCustomInput" class="behavior-text-input" placeholder="Other positive..." />
+        </div>
+        <div class="log-section">
+          <div class="log-section-title">Negative</div>
+          <div class="behavior-options">
+            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Disruption')">Disruption</button>
+            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Disrespect')">Disrespect</button>
+          </div>
+          <input type="text" id="negativeCustomInput" class="behavior-text-input" placeholder="Other negative..." />
+        </div>
+        <button class="view-log-btn" onclick="openLogViewer()">View Today's Log</button>
+      </div>
+      <div id="studentSelector" style="display: none;">
+        <div class="log-section-title">Select Student</div>
+        <div class="student-grid" id="studentGrid"></div>
+        <button class="view-log-btn" onclick="cancelBehavior()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Viewer Modal -->
+  <div class="log-modal" id="logModal">
+    <div class="log-modal-content">
+      <div class="log-modal-header">
+        <h2 class="log-modal-title">Today's Log</h2>
+        <button class="close-modal-btn" onclick="closeLogViewer()">✕</button>
+      </div>
+      <div class="log-entries" id="logEntries"></div>
+    </div>
+  </div>
+
+  <!-- Cold Call Overlay -->
+  <div class="cold-call-overlay" id="coldCallOverlay">
+    <div class="cold-call-name" id="coldCallName"></div>
+  </div>
+
+  <div class="markdown-modal" id="markdownModal">
+    <div class="markdown-modal-content">
+      <h3 class="markdown-modal-title">Paste Markdown Lesson</h3>
+      <input id="markdownLessonTitle" class="markdown-modal-field" type="text" placeholder="Lesson title" />
+      <textarea id="markdownLessonContent" class="markdown-modal-textarea" placeholder="# Bellwork&#10;&#10;What equation relates force, mass, and acceleration?&#10;&#10;---&#10;&#10;# Newton's Second Law&#10;&#10;$$ F = ma $$&#10;&#10;Force is proportional to acceleration.&#10;&#10;---&#10;&#10;# Practice&#10;&#10;A 5 kg object accelerates at 2 m/s².&#10;&#10;Find the net force."></textarea>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="add-class-btn" onclick="savePastedMarkdownLesson()" style="background: #34c759;">Save Lesson</button>
+        <button class="add-class-btn" onclick="closeMarkdownPasteModal()" style="background: #8e8e93;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="positive-banner" id="positiveBanner"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    const hourLabels = ["1st Hour", "2nd Hour", "3rd Hour", "4th Hour", "5th Hour", "6th Hour", "7th Hour", "8th Hour"];
+
+    // Initialize default classes and rosters
+    const defaultClassOptions = [
+      "Physical Science",
+      "Physics",
+      "AP Physics",
+      "Photography",
+      "AP Computer Science Principles"
+    ];
+
+    const defaultClassRosters = {
+      "Physical Science": ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Henry", "Iris", "Jack", "Kate", "Liam", "Mia", "Noah", "Olivia"],
+      "Physics": ["Aaron", "Bella", "Carlos", "Dana", "Ethan", "Fiona", "George", "Hannah", "Isaac", "Julia", "Kevin", "Laura", "Marcus", "Natalie", "Oscar"],
+      "AP Physics": ["Andrew", "Briana", "Cristian", "Dakota", "Evan", "Faye", "Gabriel", "Hailey", "Ivan", "Jessica", "Kyle", "Lily", "Mason", "Nora", "Oliver"],
+      "Photography": ["Adrian", "Bridget", "Connor", "Danielle", "Etienne", "Francesca", "Gregory", "Heidi", "Ignacio", "Jenna", "Kai", "Lucia", "Miguel", "Nina", "Pablo"],
+      "AP Computer Science Principles": ["Ava", "Benjamin", "Camille", "Derek", "Elena", "Felix", "Gina", "Hugo", "Iris", "Jasper", "Kendra", "Leo", "Maya", "Nolan", "Piper"]
+    };
+
+    let classOptions = JSON.parse(localStorage.getItem("classOptions") || JSON.stringify(defaultClassOptions));
+    const legacyClassRosters = JSON.parse(localStorage.getItem("classRosters") || JSON.stringify(defaultClassRosters));
+
+    const hourRosterKey = "lessonCockpitHourRosters";
+    const allHours = hourLabels;
+    const hourToClassMapping = JSON.parse(localStorage.getItem("hourToClassMapping") || "{}");
+    let hourRosters = JSON.parse(localStorage.getItem(hourRosterKey) || "null");
+    if (!hourRosters || typeof hourRosters !== "object") {
+      hourRosters = {};
+      allHours.forEach((hour) => {
+        const mappedClass = hourToClassMapping[hour];
+        hourRosters[hour] = mappedClass && legacyClassRosters[mappedClass]
+          ? [...legacyClassRosters[mappedClass]]
+          : [];
+      });
+      localStorage.setItem(hourRosterKey, JSON.stringify(hourRosters));
+    }
+
+    allHours.forEach((hour) => {
+      if (!Array.isArray(hourRosters[hour])) {
+        hourRosters[hour] = [];
+      }
+    });
+
+    let currentClass = null;
+    let currentHour = null;
+    let currentPdfUrl = null;
+    let selectedBehavior = null;
+    let selectedBehaviorType = null;
+    const logKey = "lessonCockpitLogs";
+    const lessonSessionKey = "lessonCockpitSession";
+    const pdfDbName = "lessonCockpitDB";
+    const pdfStoreName = "pdfs";
+    const pdfEntriesStoreName = "pdfEntries";
+    let pdfDb = null;
+    let assignedClasses = JSON.parse(localStorage.getItem("lessonCockpitAssigned") || "[]");
+    let usedStudents = [];
+    let availableStudents = [];
+    let positiveBannerTimeout = null;
+    let floatingControlsTimeout = null;
+    const positiveSoundKey = "lessonCockpitPositiveSoundDataUrl";
+    let positiveFeedbackSoundDataUrl = localStorage.getItem(positiveSoundKey) || "";
+    let positiveFeedbackAudio = null;
+    let pdfUploadTargetClass = null;
+    let pdfUploadStartsLesson = false;
+    let currentClassPdfRecords = [];
+    let currentClassPdfIndex = 0;
+    let classPdfCounts = {};
+    let reorderClassName = "";
+    let reorderPdfRecords = [];
+    let currentMarkdownSlides = [];
+    let currentMarkdownSlideIndex = 0;
+    let markdownUploadTargetClass = null;
+    let markdownTouchStartX = null;
+    let annotationMode = false;
+    let annotationTool = "pen";
+    let annotationColor = "#1d1d1f";
+    let annotationStrokes = [];
+    let activeStroke = null;
+    let activePointerId = null;
+    let sessionRestoreInProgress = false;
+
+    if (window.marked && typeof window.marked.setOptions === "function") {
+      window.marked.setOptions({ gfm: true, breaks: true });
+    }
+
+    function initDB() {
+      return new Promise((resolve) => {
+        const request = indexedDB.open(pdfDbName, 2);
+        request.onupgradeneeded = (event) => {
+          pdfDb = event.target.result;
+          if (!pdfDb.objectStoreNames.contains(pdfStoreName)) {
+            pdfDb.createObjectStore(pdfStoreName);
+          }
+          if (!pdfDb.objectStoreNames.contains(pdfEntriesStoreName)) {
+            const entriesStore = pdfDb.createObjectStore(pdfEntriesStoreName, { keyPath: "id", autoIncrement: true });
+            entriesStore.createIndex("className", "className", { unique: false });
+          }
+
+          if (event.oldVersion < 2) {
+            const upgradeTx = event.target.transaction;
+            if (!upgradeTx) return;
+            const legacyStore = upgradeTx.objectStore(pdfStoreName);
+            const entriesStore = upgradeTx.objectStore(pdfEntriesStoreName);
+            legacyStore.openCursor().onsuccess = (cursorEvent) => {
+              const cursor = cursorEvent.target.result;
+              if (!cursor) {
+                return;
+              }
+              const className = String(cursor.key || "");
+              const blob = cursor.value;
+              if (className && blob) {
+                entriesStore.add({
+                  className,
+                  type: "pdf",
+                  name: blob.name || `${className} Lesson.pdf`,
+                  content: null,
+                  blob,
+                  addedAt: Date.now(),
+                  orderIndex: Number.MAX_SAFE_INTEGER
+                });
+              }
+              cursor.continue();
+            };
+          }
+        };
+        request.onsuccess = (event) => {
+          pdfDb = event.target.result;
+          resolve();
+        };
+      });
+    }
+
+    function getClassPdfRecords(className) {
+      return new Promise((resolve) => {
+        if (!pdfDb || !className) {
+          resolve([]);
+          return;
+        }
+
+        const transaction = pdfDb.transaction([pdfEntriesStoreName], "readonly");
+        const index = transaction.objectStore(pdfEntriesStoreName).index("className");
+        const request = index.getAll(className);
+
+        request.onsuccess = () => {
+          const records = (request.result || []).slice().sort((a, b) => {
+            const aOrder = Number.isFinite(Number(a.orderIndex)) ? Number(a.orderIndex) : Number.MAX_SAFE_INTEGER;
+            const bOrder = Number.isFinite(Number(b.orderIndex)) ? Number(b.orderIndex) : Number.MAX_SAFE_INTEGER;
+            if (aOrder !== bOrder) {
+              return aOrder - bOrder;
+            }
+            const aTime = Number(a.addedAt || 0);
+            const bTime = Number(b.addedAt || 0);
+            if (aTime !== bTime) {
+              return aTime - bTime;
+            }
+            return Number(a.id || 0) - Number(b.id || 0);
+          });
+          resolve(records);
+        };
+
+        request.onerror = () => resolve([]);
+      });
+    }
+
+    function syncPdfClassMetadataFromDb() {
+      return new Promise((resolve) => {
+        if (!pdfDb) {
+          resolve();
+          return;
+        }
+
+        const counts = {};
+        const transaction = pdfDb.transaction([pdfEntriesStoreName], "readonly");
+        const store = transaction.objectStore(pdfEntriesStoreName);
+        store.openCursor().onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (!cursor) {
+            return;
+          }
+          if (cursor.value && cursor.value.className) {
+            const className = String(cursor.value.className);
+            counts[className] = (counts[className] || 0) + 1;
+          }
+          cursor.continue();
+        };
+
+        transaction.oncomplete = () => {
+          classPdfCounts = counts;
+          assignedClasses = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+          localStorage.setItem("lessonCockpitAssigned", JSON.stringify(assignedClasses));
+          resolve();
+        };
+
+        transaction.onerror = () => resolve();
+      });
+    }
+
+    function initSetupScreen() {
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("setupScreen").classList.remove("hidden");
+      const setupGrid = document.getElementById("setupGrid");
+      setupGrid.innerHTML = "";
+
+      allHours.forEach((hour) => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.gap = "8px";
+        row.style.alignItems = "center";
+        row.style.marginBottom = "12px";
+
+        const label = document.createElement("span");
+        label.textContent = hour;
+        label.style.minWidth = "120px";
+        label.style.fontWeight = "600";
+
+        const select = document.createElement("select");
+        select.style.flex = "1";
+        select.style.padding = "8px 12px";
+        select.style.borderRadius = "8px";
+        select.style.border = "1px solid #d2d2d7";
+        select.style.fontSize = "14px";
+
+        const blankOption = document.createElement("option");
+        blankOption.value = "";
+        blankOption.textContent = "-- Select Class --";
+        select.appendChild(blankOption);
+
+        classOptions.forEach((className) => {
+          const option = document.createElement("option");
+          option.value = className;
+          option.textContent = className;
+          if (hourToClassMapping[hour] === className) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+
+        select.addEventListener("change", (event) => {
+          hourToClassMapping[hour] = event.target.value;
+          localStorage.setItem("hourToClassMapping", JSON.stringify(hourToClassMapping));
+        });
+
+        row.appendChild(label);
+        row.appendChild(select);
+        setupGrid.appendChild(row);
+      });
+    }
+
+    function finishSetup() {
+      document.getElementById("setupScreen").classList.add("hidden");
+      document.getElementById("startScreen").classList.remove("hidden");
+      initStartScreen();
+    }
+
+    function clearSetup() {
+      localStorage.removeItem("hourToClassMapping");
+      window.location.reload();
+    }
+
+    function initStartScreen() {
+      syncPdfClassMetadataFromDb().then(() => {
+        const grid = document.getElementById("classGrid");
+        grid.innerHTML = "";
+
+        allHours.forEach((hour) => {
+          const mappedClass = hourToClassMapping[hour];
+          if (!mappedClass) return;
+
+          const button = document.createElement("button");
+          button.className = "class-btn";
+
+          const label = document.createElement("span");
+          label.className = "class-btn-label";
+          label.textContent = `${hour}\n(${mappedClass})`;
+          button.appendChild(label);
+
+          if (mappedClass && assignedClasses.includes(mappedClass)) {
+            button.classList.add("class-btn-assigned");
+          }
+
+          const pdfCount = mappedClass ? (classPdfCounts[mappedClass] || 0) : 0;
+          if (pdfCount >= 2) {
+            const badge = document.createElement("span");
+            badge.className = "class-btn-badge";
+            badge.textContent = `${pdfCount} Lessons`;
+            button.appendChild(badge);
+          }
+
+          button.onclick = () => selectHour(hour);
+          grid.appendChild(button);
+        });
+
+        updatePdfStorageManager();
+      });
+    }
+
+    function selectHour(hour) {
+      currentHour = hour;
+      currentClass = hourToClassMapping[hour];
+
+      if (!currentClass) {
+        alert("Please set up this hour with a class first.");
+        return;
+      }
+
+      getClassPdfRecords(currentClass).then((records) => {
+        if (records.length === 0) {
+          alert(`No lessons found for ${currentClass}. Add a PDF or markdown lesson in Lesson Storage.`);
+          return;
+        }
+        currentClassPdfRecords = records;
+        startLesson(0);
+      });
+    }
+
+    function openPdfPicker(targetClass = currentClass, startsLesson = true) {
+      if (!targetClass) {
+        alert("Select a class first.");
+        return;
+      }
+
+      pdfUploadTargetClass = targetClass;
+      pdfUploadStartsLesson = startsLesson;
+      document.getElementById("pdfWrapper").style.display = "block";
+      document.getElementById("pdfInput").click();
+    }
+
+    function addPdfToSelectedClass() {
+      const select = document.getElementById("pdfClassSelect");
+      const selectedClass = select ? select.value : "";
+      if (!selectedClass) {
+        alert("Select a class first.");
+        return;
+      }
+      closePdfReorderPanel();
+      openPdfPicker(selectedClass, false);
+    }
+
+    function addMarkdownFileToSelectedClass() {
+      const select = document.getElementById("pdfClassSelect");
+      const selectedClass = select ? select.value : "";
+      if (!selectedClass) {
+        alert("Select a class first.");
+        return;
+      }
+
+      markdownUploadTargetClass = selectedClass;
+      closePdfReorderPanel();
+      const input = document.getElementById("markdownFileInput");
+      if (input) input.click();
+    }
+
+    function openMarkdownPasteModal() {
+      const select = document.getElementById("pdfClassSelect");
+      const selectedClass = select ? select.value : "";
+      if (!selectedClass) {
+        alert("Select a class first.");
+        return;
+      }
+
+      closePdfReorderPanel();
+      const modal = document.getElementById("markdownModal");
+      const title = document.getElementById("markdownLessonTitle");
+      const content = document.getElementById("markdownLessonContent");
+      if (title) title.value = "";
+      if (content) content.value = "";
+      if (modal) modal.classList.add("open");
+    }
+
+    function closeMarkdownPasteModal() {
+      const modal = document.getElementById("markdownModal");
+      if (modal) {
+        modal.classList.remove("open");
+      }
+    }
+
+    function savePastedMarkdownLesson() {
+      const select = document.getElementById("pdfClassSelect");
+      const selectedClass = select ? select.value : "";
+      if (!selectedClass) {
+        alert("Select a class first.");
+        return;
+      }
+
+      const titleInput = document.getElementById("markdownLessonTitle");
+      const contentInput = document.getElementById("markdownLessonContent");
+      const title = titleInput ? titleInput.value.trim() : "";
+      const content = contentInput ? contentInput.value : "";
+
+      if (!content.trim()) {
+        alert("Paste markdown content first.");
+        return;
+      }
+
+      const transaction = pdfDb.transaction([pdfEntriesStoreName], "readwrite");
+      const entriesStore = transaction.objectStore(pdfEntriesStoreName);
+      entriesStore.add({
+        className: selectedClass,
+        type: "markdown",
+        name: title || `Markdown Lesson ${new Date().toLocaleDateString()}`,
+        content,
+        addedAt: Date.now(),
+        orderIndex: Number.MAX_SAFE_INTEGER
+      });
+
+      transaction.oncomplete = () => {
+        closeMarkdownPasteModal();
+        initStartScreen();
+        alert(`Saved markdown lesson for ${selectedClass}.`);
+      };
+    }
+
+    function onPdfClassSelectionChanged() {
+      closePdfReorderPanel();
+    }
+
+    function openPdfReorderPanel() {
+      const select = document.getElementById("pdfClassSelect");
+      const selectedClass = select ? select.value : "";
+      if (!selectedClass) {
+        alert("Select a class first.");
+        return;
+      }
+
+      getClassPdfRecords(selectedClass).then((records) => {
+        if (records.length < 2) {
+          alert("At least 2 lessons are needed to reorder.");
+          return;
+        }
+        reorderClassName = selectedClass;
+        reorderPdfRecords = records.slice();
+        renderPdfReorderList();
+        document.getElementById("pdfOrderPanel").classList.remove("hidden");
+      });
+    }
+
+    function closePdfReorderPanel() {
+      reorderClassName = "";
+      reorderPdfRecords = [];
+      const panel = document.getElementById("pdfOrderPanel");
+      const list = document.getElementById("pdfOrderList");
+      if (panel) {
+        panel.classList.add("hidden");
+      }
+      if (list) {
+        list.innerHTML = "";
+      }
+    }
+
+    function renderPdfReorderList() {
+      const list = document.getElementById("pdfOrderList");
+      if (!list) return;
+
+      list.innerHTML = reorderPdfRecords.map((record, index) => {
+        const type = record && record.type === "markdown" ? "Markdown" : "PDF";
+        const name = record && record.name ? record.name : `${type} ${index + 1}`;
+        return `
+          <div class="pdf-order-item">
+            <div class="pdf-order-name">${index + 1}. [${type}] ${name}</div>
+            <div class="pdf-order-controls">
+              <button class="pdf-order-btn" onclick="movePdfOrder(${index}, -1)" ${index === 0 ? "disabled" : ""}>↑</button>
+              <button class="pdf-order-btn" onclick="movePdfOrder(${index}, 1)" ${index === reorderPdfRecords.length - 1 ? "disabled" : ""}>↓</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function movePdfOrder(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= reorderPdfRecords.length) {
+        return;
+      }
+      const temp = reorderPdfRecords[index];
+      reorderPdfRecords[index] = reorderPdfRecords[newIndex];
+      reorderPdfRecords[newIndex] = temp;
+      renderPdfReorderList();
+    }
+
+    function savePdfOrder() {
+      if (!reorderClassName || reorderPdfRecords.length < 2) {
+        return;
+      }
+
+      const transaction = pdfDb.transaction([pdfEntriesStoreName], "readwrite");
+      const store = transaction.objectStore(pdfEntriesStoreName);
+
+      reorderPdfRecords.forEach((record, index) => {
+        store.put({
+          ...record,
+          className: reorderClassName,
+          orderIndex: index
+        });
+      });
+
+      transaction.oncomplete = () => {
+        initStartScreen();
+        alert(`Saved lesson order for ${reorderClassName}.`);
+        closePdfReorderPanel();
+      };
+    }
+
+    document.getElementById("pdfInput").addEventListener("change", (event) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) {
+        return;
+      }
+
+      if (files.some((file) => file.type !== "application/pdf")) {
+        alert("Please select a PDF file.");
+        event.target.value = "";
+        return;
+      }
+
+      const targetClass = pdfUploadTargetClass || currentClass;
+      if (!targetClass) {
+        alert("No class selected for this PDF.");
+        event.target.value = "";
+        return;
+      }
+
+      const transaction = pdfDb.transaction([pdfEntriesStoreName, pdfStoreName], "readwrite");
+      const entriesStore = transaction.objectStore(pdfEntriesStoreName);
+      const legacyStore = transaction.objectStore(pdfStoreName);
+      const now = Date.now();
+
+      files.forEach((file, index) => {
+        entriesStore.add({
+          className: targetClass,
+          type: "pdf",
+          name: file.name || `${targetClass} Lesson.pdf`,
+          content: null,
+          blob: file,
+          addedAt: now + index,
+          orderIndex: Number.MAX_SAFE_INTEGER
+        });
+      });
+
+      legacyStore.delete(targetClass);
+
+      transaction.oncomplete = () => {
+        if (!assignedClasses.includes(targetClass)) {
+          assignedClasses.push(targetClass);
+          localStorage.setItem("lessonCockpitAssigned", JSON.stringify(assignedClasses));
+        }
+
+        const shouldStartLesson = pdfUploadStartsLesson;
+        pdfUploadTargetClass = null;
+        pdfUploadStartsLesson = false;
+        document.getElementById("pdfInput").value = "";
+
+        initStartScreen();
+
+        if (!shouldStartLesson) {
+          alert(`Saved PDF lesson for ${targetClass}.`);
+          return;
+        }
+
+        getClassPdfRecords(targetClass).then((records) => {
+          if (records.length === 0) {
+            alert("No lesson was saved for this class.");
+            return;
+          }
+          currentClass = targetClass;
+          currentClassPdfRecords = records;
+          const firstNewIndex = Math.max(0, records.length - files.length);
+          startLesson(firstNewIndex);
+        });
+      };
+    });
+
+    document.getElementById("markdownFileInput").addEventListener("change", async (event) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) {
+        return;
+      }
+
+      const targetClass = markdownUploadTargetClass;
+      markdownUploadTargetClass = null;
+      event.target.value = "";
+
+      if (!targetClass) {
+        alert("No class selected for this markdown lesson.");
+        return;
+      }
+
+      const markdownFiles = files.filter((file) => {
+        const lowerName = String(file.name || "").toLowerCase();
+        return file.type === "text/markdown" || file.type === "text/plain" || lowerName.endsWith(".md");
+      });
+
+      if (markdownFiles.length === 0) {
+        alert("Please choose one or more .md files.");
+        return;
+      }
+
+      const transaction = pdfDb.transaction([pdfEntriesStoreName], "readwrite");
+      const entriesStore = transaction.objectStore(pdfEntriesStoreName);
+      const now = Date.now();
+
+      for (let index = 0; index < markdownFiles.length; index += 1) {
+        const file = markdownFiles[index];
+        const content = await file.text();
+        entriesStore.add({
+          className: targetClass,
+          type: "markdown",
+          name: file.name || `${targetClass} Lesson.md`,
+          content,
+          addedAt: now + index,
+          orderIndex: Number.MAX_SAFE_INTEGER
+        });
+      }
+
+      transaction.oncomplete = () => {
+        initStartScreen();
+        alert(`Saved markdown lesson${markdownFiles.length === 1 ? "" : "s"} for ${targetClass}.`);
+      };
+    });
+
+    function startLesson(startIndex = 0) {
+      if (!currentClassPdfRecords.length) {
+        alert("No lessons available for this class.");
+        returnToStart();
+        return;
+      }
+
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("setupScreen").classList.add("hidden");
+      document.getElementById("lessonPage").classList.remove("hidden");
+      document.getElementById("lessonHourName").textContent = currentHour;
+      document.getElementById("lessonClassName").textContent = currentClass;
+      clearAnnotations(false);
+      currentClassPdfIndex = Math.min(Math.max(startIndex, 0), currentClassPdfRecords.length - 1);
+      showCurrentLessonPdf();
+      updatePdfNavigationState();
+      showControls();
+      persistLessonSession();
+      requestAnimationFrame(() => resizeAnnotationCanvas());
+      resetColdCallRotation();
+    }
+
+    function showCurrentLessonPdf() {
+      const record = currentClassPdfRecords[currentClassPdfIndex];
+      if (!record) {
+        return;
+      }
+
+      const lessonType = record.type === "markdown" ? "markdown" : "pdf";
+      if (lessonType === "markdown") {
+        if (currentPdfUrl) {
+          URL.revokeObjectURL(currentPdfUrl);
+          currentPdfUrl = null;
+        }
+        renderMarkdownLesson(record);
+        updatePdfNavigationState();
+        return;
+      }
+
+      const markdownViewer = document.getElementById("markdownViewer");
+      if (markdownViewer) markdownViewer.classList.add("hidden");
+      const pdfViewer = document.getElementById("pdfViewer");
+      if (pdfViewer) pdfViewer.classList.remove("hidden");
+
+      if (!record.blob) {
+        return;
+      }
+
+      if (currentPdfUrl) {
+        URL.revokeObjectURL(currentPdfUrl);
+      }
+
+      currentPdfUrl = URL.createObjectURL(record.blob);
+      document.getElementById("pdfViewer").src = currentPdfUrl;
+      currentMarkdownSlides = [];
+      currentMarkdownSlideIndex = 0;
+      updatePdfNavigationState();
+      persistLessonSession();
+    }
+
+    function splitMarkdownSlides(content) {
+      const text = String(content || "");
+      const slides = text
+        .split(/\r?\n\s*---\s*\r?\n/g)
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+      return slides.length ? slides : [text];
+    }
+
+    function renderMarkdownLesson(record) {
+      const pdfViewer = document.getElementById("pdfViewer");
+      const markdownViewer = document.getElementById("markdownViewer");
+
+      if (pdfViewer) {
+        pdfViewer.src = "";
+        pdfViewer.classList.add("hidden");
+      }
+      if (markdownViewer) markdownViewer.classList.remove("hidden");
+
+      currentMarkdownSlides = splitMarkdownSlides(record.content || "");
+      currentMarkdownSlideIndex = Math.min(Math.max(currentMarkdownSlideIndex, 0), currentMarkdownSlides.length - 1);
+      renderCurrentMarkdownSlide();
+      bindMarkdownSwipe();
+    }
+
+    function renderCurrentMarkdownSlide() {
+      const slideContainer = document.getElementById("markdownSlide");
+      const slideIndicator = document.getElementById("markdownSlideIndicator");
+      if (!slideContainer) {
+        return;
+      }
+
+      const markdown = currentMarkdownSlides[currentMarkdownSlideIndex] || "";
+      const html = window.marked && typeof window.marked.parse === "function"
+        ? window.marked.parse(markdown)
+        : `<pre>${markdown.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
+      slideContainer.innerHTML = html;
+      normalizeDisplayMathBlocks(slideContainer);
+      slideContainer.scrollTop = 0;
+
+      if (slideIndicator) {
+        slideIndicator.textContent = currentMarkdownSlides.length > 1
+          ? `Slide ${currentMarkdownSlideIndex + 1} of ${currentMarkdownSlides.length}`
+          : "";
+      }
+
+      applyMathRendering(slideContainer);
+      persistLessonSession();
+    }
+
+    function normalizeDisplayMathBlocks(container) {
+      if (!container) return;
+
+      const nodes = Array.from(container.children || []);
+      let index = 0;
+
+      while (index < nodes.length) {
+        const startNode = nodes[index];
+        const isStart = startNode && startNode.tagName === "P" && startNode.textContent.trim() === "$$";
+        if (!isStart) {
+          index += 1;
+          continue;
+        }
+
+        let endIndex = -1;
+        for (let scan = index + 1; scan < nodes.length; scan += 1) {
+          const maybeEnd = nodes[scan];
+          const isEnd = maybeEnd && maybeEnd.tagName === "P" && maybeEnd.textContent.trim() === "$$";
+          if (isEnd) {
+            endIndex = scan;
+            break;
+          }
+        }
+
+        if (endIndex === -1) {
+          index += 1;
+          continue;
+        }
+
+        const betweenNodes = nodes.slice(index + 1, endIndex);
+        const mathLines = betweenNodes
+          .map((node) => (node.textContent || "").trim())
+          .filter((line) => line.length > 0);
+
+        const wrapper = document.createElement("div");
+        wrapper.textContent = `$$\n${mathLines.join("\n")}\n$$`;
+
+        startNode.replaceWith(wrapper);
+        betweenNodes.forEach((node) => node.remove());
+        nodes[endIndex].remove();
+
+        const freshNodes = Array.from(container.children || []);
+        nodes.length = 0;
+        freshNodes.forEach((node) => nodes.push(node));
+        index += 1;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderMathTextFallback(container) {
+      if (!container || !window.katex || typeof window.katex.renderToString !== "function") {
+        return false;
+      }
+
+      const elements = [container, ...Array.from(container.querySelectorAll("p, li, blockquote, td, th, div, span, strong, em"))];
+      let changed = false;
+
+      elements.forEach((element) => {
+        if (!element || element.querySelector(".katex")) {
+          return;
+        }
+
+        const raw = element.textContent;
+        if (!raw || (!raw.includes("$$") && !raw.includes("$"))) {
+          return;
+        }
+
+        const parts = [];
+        let lastIndex = 0;
+        const regex = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
+        let match = regex.exec(raw);
+
+        while (match) {
+          const [fullMatch, displayExpr, inlineExpr] = match;
+          const matchIndex = match.index;
+
+          if (matchIndex > lastIndex) {
+            parts.push(escapeHtml(raw.slice(lastIndex, matchIndex)));
+          }
+
+          const expression = displayExpr != null ? displayExpr.trim() : inlineExpr.trim();
+          const displayMode = displayExpr != null;
+
+          try {
+            parts.push(window.katex.renderToString(expression, {
+              throwOnError: false,
+              displayMode
+            }));
+          } catch (error) {
+            parts.push(escapeHtml(fullMatch));
+          }
+
+          lastIndex = matchIndex + fullMatch.length;
+          match = regex.exec(raw);
+        }
+
+        if (!parts.length) {
+          return;
+        }
+
+        if (lastIndex < raw.length) {
+          parts.push(escapeHtml(raw.slice(lastIndex)));
+        }
+
+        element.innerHTML = parts.join("");
+        changed = true;
+      });
+
+      return changed;
+    }
+
+    function applyMathRendering(container, retryCount = 24) {
+      if (!container) return;
+
+      if (renderMathTextFallback(container)) {
+        return;
+      }
+
+      if (window.renderMathInElement) {
+        try {
+          window.renderMathInElement(container, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false }
+            ],
+            throwOnError: false
+          });
+        } catch (error) {
+          // Keep rendering even if math parse fails.
+        }
+        return;
+      }
+
+      if (window.katex && typeof window.katex.renderToString === "function") {
+        renderMathTextFallback(container);
+        return;
+      }
+
+      if (retryCount > 0) {
+        setTimeout(() => applyMathRendering(container, retryCount - 1), 250);
+      }
+    }
+
+    function bindMarkdownSwipe() {
+      const markdownViewer = document.getElementById("markdownViewer");
+      if (!markdownViewer || markdownViewer.dataset.swipeBound === "1") {
+        return;
+      }
+      markdownViewer.dataset.swipeBound = "1";
+
+      markdownViewer.addEventListener("touchstart", (event) => {
+        const touch = event.changedTouches && event.changedTouches[0];
+        markdownTouchStartX = touch ? touch.clientX : null;
+      }, { passive: true });
+
+      markdownViewer.addEventListener("touchend", (event) => {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (!touch || markdownTouchStartX == null) {
+          markdownTouchStartX = null;
+          return;
+        }
+        const delta = touch.clientX - markdownTouchStartX;
+        markdownTouchStartX = null;
+        if (Math.abs(delta) < 45) {
+          return;
+        }
+        if (delta < 0) {
+          showNextPdf();
+        } else {
+          showPreviousPdf();
+        }
+      }, { passive: true });
+    }
+
+    function getAnnotationConfig(tool = annotationTool) {
+      if (tool === "highlighter") {
+        return { width: 16, alpha: 0.22, composite: "source-over" };
+      }
+      if (tool === "eraser") {
+        return { width: 22, alpha: 1, composite: "destination-out" };
+      }
+      return { width: 3, alpha: 1, composite: "source-over" };
+    }
+
+    function getAnnotationCanvas() {
+      return document.getElementById("annotationCanvas");
+    }
+
+    function getAnnotationContext() {
+      const canvas = getAnnotationCanvas();
+      return canvas ? canvas.getContext("2d") : null;
+    }
+
+    function resizeAnnotationCanvas() {
+      const canvas = getAnnotationCanvas();
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width));
+      const height = Math.max(1, Math.round(rect.height));
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+
+      const ctx = getAnnotationContext();
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      redrawAnnotations();
+    }
+
+    function drawStroke(stroke) {
+      const ctx = getAnnotationContext();
+      if (!ctx || !stroke || !Array.isArray(stroke.points) || stroke.points.length === 0) {
+        return;
+      }
+
+      const config = getAnnotationConfig(stroke.tool);
+      ctx.globalCompositeOperation = config.composite;
+      ctx.globalAlpha = config.alpha;
+      ctx.strokeStyle = stroke.color || annotationColor;
+      ctx.lineWidth = config.width;
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      for (let i = 1; i < stroke.points.length; i += 1) {
+        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+      }
+      if (stroke.points.length === 1) {
+        ctx.lineTo(stroke.points[0].x + 0.01, stroke.points[0].y + 0.01);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    function redrawAnnotations() {
+      const canvas = getAnnotationCanvas();
+      const ctx = getAnnotationContext();
+      if (!canvas || !ctx) return;
+      const dpr = window.devicePixelRatio || 1;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      annotationStrokes.forEach((stroke) => drawStroke(stroke));
+    }
+
+    function getCanvasPoint(event) {
+      const canvas = getAnnotationCanvas();
+      if (!canvas) return { x: 0, y: 0 };
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+
+    function updateAnnotationToolbarState() {
+      const modeBtn = document.getElementById("annotationModeBtn");
+      const penBtn = document.getElementById("annotationPenBtn");
+      const highlighterBtn = document.getElementById("annotationHighlighterBtn");
+      const eraserBtn = document.getElementById("annotationEraserBtn");
+      const redBtn = document.getElementById("annotationColorRed");
+      const blueBtn = document.getElementById("annotationColorBlue");
+      const blackBtn = document.getElementById("annotationColorBlack");
+      const canvas = getAnnotationCanvas();
+      const toolbar = document.getElementById("annotationToolbar");
+
+      if (toolbar) {
+        toolbar.classList.toggle("active", annotationMode);
+      }
+
+      if (modeBtn) {
+        modeBtn.classList.toggle("mode-on", annotationMode);
+        modeBtn.textContent = annotationMode ? "Annotation ON" : "Annotation OFF";
+      }
+
+      if (penBtn) penBtn.classList.toggle("active", annotationTool === "pen");
+      if (highlighterBtn) highlighterBtn.classList.toggle("active", annotationTool === "highlighter");
+      if (eraserBtn) eraserBtn.classList.toggle("active", annotationTool === "eraser");
+
+      if (redBtn) redBtn.classList.toggle("active", annotationColor.toLowerCase() === "#ff3b30");
+      if (blueBtn) blueBtn.classList.toggle("active", annotationColor.toLowerCase() === "#007aff");
+      if (blackBtn) blackBtn.classList.toggle("active", annotationColor.toLowerCase() === "#1d1d1f");
+
+      if (canvas) {
+        canvas.classList.toggle("annotation-active", annotationMode);
+      }
+    }
+
+    function setAnnotationMode(enabled) {
+      annotationMode = !!enabled;
+      if (!annotationMode) {
+        activeStroke = null;
+        activePointerId = null;
+      } else {
+        resizeAnnotationCanvas();
+      }
+      updateAnnotationToolbarState();
+    }
+
+    function toggleAnnotationMode() {
+      setAnnotationMode(!annotationMode);
+    }
+
+    function setAnnotationTool(tool) {
+      annotationTool = tool;
+      if (tool !== "eraser") {
+        // keep selected color for non-eraser tools
+      }
+      updateAnnotationToolbarState();
+    }
+
+    function setAnnotationColor(color) {
+      annotationColor = color;
+      if (annotationTool === "eraser") {
+        annotationTool = "pen";
+      }
+      updateAnnotationToolbarState();
+    }
+
+    function clearAnnotations(needsConfirm = false) {
+      annotationStrokes = [];
+      activeStroke = null;
+      activePointerId = null;
+      redrawAnnotations();
+    }
+
+    function undoAnnotation() {
+      if (annotationStrokes.length === 0) return;
+      annotationStrokes.pop();
+      redrawAnnotations();
+    }
+
+    function handleAnnotationPointerDown(event) {
+      if (!annotationMode) return;
+      if (event.pointerType === "mouse" && event.button !== 0) {
+        return;
+      }
+
+      const canvas = getAnnotationCanvas();
+      if (!canvas) return;
+
+      event.preventDefault();
+      const point = getCanvasPoint(event);
+      activePointerId = event.pointerId;
+      activeStroke = {
+        tool: annotationTool,
+        color: annotationColor,
+        points: [point]
+      };
+      annotationStrokes.push(activeStroke);
+      canvas.setPointerCapture(event.pointerId);
+      drawStroke(activeStroke);
+    }
+
+    function handleAnnotationPointerMove(event) {
+      if (!annotationMode || !activeStroke || activePointerId !== event.pointerId) {
+        return;
+      }
+      event.preventDefault();
+      const point = getCanvasPoint(event);
+      activeStroke.points.push(point);
+      redrawAnnotations();
+    }
+
+    function endAnnotationStroke(event) {
+      if (!activeStroke || activePointerId !== event.pointerId) {
+        return;
+      }
+      event.preventDefault();
+      activeStroke = null;
+      activePointerId = null;
+    }
+
+    function initAnnotationOverlay() {
+      const canvas = getAnnotationCanvas();
+      if (!canvas || canvas.dataset.bound === "1") {
+        updateAnnotationToolbarState();
+        return;
+      }
+
+      canvas.dataset.bound = "1";
+      canvas.addEventListener("pointerdown", handleAnnotationPointerDown);
+      canvas.addEventListener("pointermove", handleAnnotationPointerMove);
+      canvas.addEventListener("pointerup", endAnnotationStroke);
+      canvas.addEventListener("pointercancel", endAnnotationStroke);
+      canvas.addEventListener("pointerleave", endAnnotationStroke);
+
+      window.addEventListener("resize", () => {
+        const lessonPage = document.getElementById("lessonPage");
+        if (lessonPage && !lessonPage.classList.contains("hidden")) {
+          resizeAnnotationCanvas();
+        }
+      });
+
+      updateAnnotationToolbarState();
+      resizeAnnotationCanvas();
+    }
+
+    function updatePdfNavigationState() {
+      const total = currentClassPdfRecords.length;
+      const prevBtn = document.getElementById("prevPdfBtn");
+      const nextBtn = document.getElementById("nextPdfBtn");
+      const info = document.getElementById("lessonPdfInfo");
+      const record = currentClassPdfRecords[currentClassPdfIndex];
+      const isMarkdown = !!(record && record.type === "markdown");
+      const recordLabel = isMarkdown ? "Markdown" : "PDF";
+      const recordName = record && record.name ? record.name : `${recordLabel} ${currentClassPdfIndex + 1}`;
+      const slideInfo = isMarkdown && currentMarkdownSlides.length > 0
+        ? ` • Slide ${currentMarkdownSlideIndex + 1} of ${currentMarkdownSlides.length}`
+        : "";
+
+      if (info) {
+        info.textContent = total > 0
+          ? `Lesson ${currentClassPdfIndex + 1} of ${total} • ${recordName}${slideInfo}`
+          : "";
+      }
+
+      const hasPrevSlide = isMarkdown && currentMarkdownSlideIndex > 0;
+      const hasNextSlide = isMarkdown && currentMarkdownSlideIndex < currentMarkdownSlides.length - 1;
+      const disablePrev = total <= 1 && !hasPrevSlide;
+      const disableNext = total <= 1 && !hasNextSlide;
+
+      if (prevBtn) {
+        prevBtn.disabled = disablePrev;
+        prevBtn.style.opacity = disablePrev ? "0.6" : "1";
+      }
+      if (nextBtn) {
+        nextBtn.disabled = disableNext;
+        nextBtn.style.opacity = disableNext ? "0.6" : "1";
+      }
+    }
+
+    function showPreviousPdf() {
+      const record = currentClassPdfRecords[currentClassPdfIndex];
+      const isMarkdown = !!(record && record.type === "markdown");
+
+      if (isMarkdown && currentMarkdownSlideIndex > 0) {
+        currentMarkdownSlideIndex -= 1;
+        renderCurrentMarkdownSlide();
+        updatePdfNavigationState();
+        return;
+      }
+
+      if (currentClassPdfRecords.length <= 1) {
+        return;
+      }
+
+      currentClassPdfIndex = (currentClassPdfIndex - 1 + currentClassPdfRecords.length) % currentClassPdfRecords.length;
+      currentMarkdownSlideIndex = 0;
+      showCurrentLessonPdf();
+    }
+
+    function showNextPdf() {
+      const record = currentClassPdfRecords[currentClassPdfIndex];
+      const isMarkdown = !!(record && record.type === "markdown");
+
+      if (isMarkdown && currentMarkdownSlideIndex < currentMarkdownSlides.length - 1) {
+        currentMarkdownSlideIndex += 1;
+        renderCurrentMarkdownSlide();
+        updatePdfNavigationState();
+        return;
+      }
+
+      if (currentClassPdfRecords.length <= 1) {
+        return;
+      }
+
+      currentClassPdfIndex = (currentClassPdfIndex + 1) % currentClassPdfRecords.length;
+      currentMarkdownSlideIndex = 0;
+      showCurrentLessonPdf();
+    }
+
+    function hideControls() {
+      document.getElementById("lessonPage").classList.add("presentation-mode");
+      persistLessonSession();
+    }
+
+    function showControls() {
+      document.getElementById("lessonPage").classList.remove("presentation-mode");
+      persistLessonSession();
+    }
+
+    function activateFloatingControls() {
+      const controls = document.getElementById("floatingControls");
+      controls.classList.add("active");
+      if (floatingControlsTimeout) {
+        clearTimeout(floatingControlsTimeout);
+      }
+      floatingControlsTimeout = setTimeout(() => {
+        controls.classList.remove("active");
+      }, 1200);
+    }
+
+    function returnToStart() {
+      clearLessonSession();
+      document.getElementById("lessonPage").classList.add("hidden");
+      document.getElementById("setupScreen").classList.add("hidden");
+      document.getElementById("adminScreen").classList.add("hidden");
+      document.getElementById("reportScreen").classList.add("hidden");
+      document.getElementById("startScreen").classList.remove("hidden");
+      document.getElementById("logPanel").classList.remove("open");
+      document.getElementById("logModal").classList.remove("open");
+      closeMarkdownPasteModal();
+      document.getElementById("pdfInput").value = "";
+      const markdownInput = document.getElementById("markdownFileInput");
+      if (markdownInput) markdownInput.value = "";
+      document.getElementById("lessonPage").classList.remove("presentation-mode");
+      if (currentPdfUrl) {
+        URL.revokeObjectURL(currentPdfUrl);
+      }
+      currentClass = null;
+      currentHour = null;
+      currentPdfUrl = null;
+      currentClassPdfRecords = [];
+      currentClassPdfIndex = 0;
+      currentMarkdownSlides = [];
+      currentMarkdownSlideIndex = 0;
+      setAnnotationMode(false);
+      clearAnnotations(false);
+      initStartScreen();
+    }
+
+    function getLessonSessionSnapshot() {
+      const lessonPage = document.getElementById("lessonPage");
+      const currentRecord = currentClassPdfRecords[currentClassPdfIndex] || null;
+      return {
+        hour: currentHour,
+        className: currentClass,
+        recordId: currentRecord && Number.isFinite(Number(currentRecord.id)) ? Number(currentRecord.id) : null,
+        lessonIndex: currentClassPdfIndex,
+        markdownSlideIndex: currentMarkdownSlideIndex,
+        presentationMode: !!(lessonPage && lessonPage.classList.contains("presentation-mode"))
+      };
+    }
+
+    function persistLessonSession() {
+      if (sessionRestoreInProgress || !currentHour || !currentClass || !currentClassPdfRecords.length) {
+        return;
+      }
+
+      try {
+        localStorage.setItem(lessonSessionKey, JSON.stringify(getLessonSessionSnapshot()));
+      } catch (error) {
+        // Ignore storage failures.
+      }
+    }
+
+    function clearLessonSession() {
+      try {
+        localStorage.removeItem(lessonSessionKey);
+      } catch (error) {
+        // Ignore storage failures.
+      }
+    }
+
+    function restoreLessonSession() {
+      let session = null;
+      try {
+        session = JSON.parse(localStorage.getItem(lessonSessionKey) || "null");
+      } catch (error) {
+        session = null;
+      }
+
+      if (!session || !session.hour || !session.className) {
+        return Promise.resolve(false);
+      }
+
+      const mappedClass = hourToClassMapping[session.hour];
+      if (!mappedClass || mappedClass !== session.className) {
+        clearLessonSession();
+        return Promise.resolve(false);
+      }
+
+      return getClassPdfRecords(session.className).then((records) => {
+        if (!records.length) {
+          clearLessonSession();
+          return false;
+        }
+
+        currentHour = session.hour;
+        currentClass = session.className;
+        currentClassPdfRecords = records;
+
+        let restoredIndex = Number.isFinite(Number(session.lessonIndex))
+          ? Math.min(Math.max(Number(session.lessonIndex), 0), records.length - 1)
+          : 0;
+
+        if (session.recordId != null) {
+          const matchedIndex = records.findIndex((record) => Number(record.id) === Number(session.recordId));
+          if (matchedIndex >= 0) {
+            restoredIndex = matchedIndex;
+          }
+        }
+
+        const restoredSlideIndex = Number.isFinite(Number(session.markdownSlideIndex))
+          ? Math.max(Number(session.markdownSlideIndex), 0)
+          : 0;
+
+        sessionRestoreInProgress = true;
+        startLesson(restoredIndex);
+        currentMarkdownSlideIndex = restoredSlideIndex;
+        showCurrentLessonPdf();
+        updatePdfNavigationState();
+        if (session.presentationMode) {
+          hideControls();
+        }
+        sessionRestoreInProgress = false;
+        persistLessonSession();
+        return true;
+      }).catch(() => {
+        clearLessonSession();
+        sessionRestoreInProgress = false;
+        return false;
+      });
+    }
+
+    function openLogPanel() {
+      document.getElementById("logPanel").classList.add("open");
+      document.getElementById("behaviorSelector").style.display = "block";
+      document.getElementById("studentSelector").style.display = "none";
+    }
+
+    function closeLogPanel() {
+      document.getElementById("logPanel").classList.remove("open");
+      cancelBehavior();
+    }
+
+    function selectBehavior(type, category) {
+      selectedBehaviorType = type;
+      selectedBehavior = category;
+      document.getElementById("behaviorSelector").style.display = "none";
+      document.getElementById("studentSelector").style.display = "block";
+      populateStudentGrid();
+    }
+
+    function populateStudentGrid() {
+      const grid = document.getElementById("studentGrid");
+      grid.innerHTML = "";
+      const students = hourRosters[currentHour] || [];
+
+      students.forEach((studentName) => {
+        const button = document.createElement("button");
+        button.className = "student-btn";
+        button.textContent = studentName;
+        button.onclick = () => logBehavior(studentName);
+        grid.appendChild(button);
+      });
+    }
+
+    function logBehavior(studentName) {
+      const entry = {
+        timestamp: new Date().toISOString(),
+        class: currentClass,
+        hour: currentHour,
+        student: studentName,
+        type: selectedBehaviorType,
+        category: selectedBehavior
+      };
+
+      const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
+      logs.push(entry);
+      localStorage.setItem(logKey, JSON.stringify(logs));
+
+      if (selectedBehaviorType === "positive") {
+        showPositiveBanner(studentName, selectedBehavior);
+        playPositiveFeedbackSound();
+      }
+
+      cancelBehavior();
+      closeLogPanel();
+    }
+
+    function showPositiveBanner(studentName, category) {
+      const banner = document.getElementById("positiveBanner");
+      banner.textContent = `+ ${studentName} - ${category}`;
+      banner.classList.add("show");
+
+      if (positiveBannerTimeout) {
+        clearTimeout(positiveBannerTimeout);
+      }
+
+      positiveBannerTimeout = setTimeout(() => {
+        banner.classList.remove("show");
+      }, 2200);
+    }
+
+    function playPositiveFeedbackSound() {
+      if (!positiveFeedbackSoundDataUrl) {
+        return;
+      }
+      if (!positiveFeedbackAudio) {
+        positiveFeedbackAudio = new Audio();
+      }
+      positiveFeedbackAudio.src = positiveFeedbackSoundDataUrl;
+      positiveFeedbackAudio.currentTime = 0;
+      positiveFeedbackAudio.volume = 0.4;
+      positiveFeedbackAudio.play().catch(() => {});
+    }
+
+    function cancelBehavior() {
+      selectedBehavior = null;
+      selectedBehaviorType = null;
+      document.getElementById("behaviorSelector").style.display = "block";
+      document.getElementById("studentSelector").style.display = "none";
+    }
+
+    function openLogViewer() {
+      document.getElementById("logModal").classList.add("open");
+      populateLogEntries();
+    }
+
+    function closeLogViewer() {
+      document.getElementById("logModal").classList.remove("open");
+    }
+
+    function populateLogEntries() {
+      const container = document.getElementById("logEntries");
+      const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
+      const today = new Date().toISOString().split("T")[0];
+      const todayLogs = logs.filter((log) => log.timestamp.split("T")[0] === today);
+
+      if (todayLogs.length === 0) {
+        container.innerHTML = '<div class="empty-log">No behaviors logged today.</div>';
+        return;
+      }
+
+      container.innerHTML = todayLogs.map((log) => {
+        const time = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const entryClass = log.type === "positive" ? "log-entry-positive" : "log-entry-negative";
+        return `
+          <div class="log-entry ${entryClass}">
+            <div class="log-entry-time">${time} • ${log.hour}</div>
+            <div class="log-entry-name">${log.student}</div>
+            <div class="log-entry-category">${log.category}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function resetColdCallRotation() {
+      usedStudents = [];
+      availableStudents = [...(hourRosters[currentHour] || [])];
+    }
+
+    function getNextStudent() {
+      if (availableStudents.length === 0) {
+        resetColdCallRotation();
+      }
+      const randomIndex = Math.floor(Math.random() * availableStudents.length);
+      const selectedStudent = availableStudents[randomIndex];
+      availableStudents.splice(randomIndex, 1);
+      usedStudents.push(selectedStudent);
+      return selectedStudent;
+    }
+
+    function triggerColdCall() {
+      if (!currentHour || !hourRosters[currentHour] || hourRosters[currentHour].length === 0) {
+        alert("No students available in this hour.");
+        return;
+      }
+
+      const selectedStudent = getNextStudent();
+      const overlay = document.getElementById("coldCallOverlay");
+      const nameDisplay = document.getElementById("coldCallName");
+
+      nameDisplay.textContent = selectedStudent;
+      overlay.classList.remove("fade-out");
+      overlay.classList.add("show");
+
+      setTimeout(() => {
+        overlay.classList.add("fade-out");
+        setTimeout(() => {
+          overlay.classList.remove("show", "fade-out");
+        }, 500);
+      }, 4000);
+    }
+
+    function openAdminPanel() {
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("setupScreen").classList.add("hidden");
+      document.getElementById("lessonPage").classList.add("hidden");
+      document.getElementById("adminScreen").classList.remove("hidden");
+      updateClassEditor();
+      updateHourMappingEditor();
+      updateStudentClassSelect();
+      updateStudentEditor();
+      updatePdfStorageManager();
+      updateSoundStatus();
+    }
+
+    function updateHourMappingEditor() {
+      const editor = document.getElementById("adminHourMappingEditor");
+      if (!editor) return;
+
+      editor.innerHTML = "";
+
+      allHours.forEach((hour) => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.gap = "8px";
+        row.style.alignItems = "center";
+        row.style.marginBottom = "10px";
+
+        const label = document.createElement("span");
+        label.textContent = hour;
+        label.style.minWidth = "110px";
+        label.style.fontWeight = "600";
+
+        const select = document.createElement("select");
+        select.style.flex = "1";
+        select.style.padding = "8px 12px";
+        select.style.borderRadius = "8px";
+        select.style.border = "1px solid #d2d2d7";
+        select.style.fontSize = "14px";
+
+        const blankOption = document.createElement("option");
+        blankOption.value = "";
+        blankOption.textContent = "-- Unassigned --";
+        select.appendChild(blankOption);
+
+        classOptions.forEach((className) => {
+          const option = document.createElement("option");
+          option.value = className;
+          option.textContent = className;
+          if (hourToClassMapping[hour] === className) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+
+        select.addEventListener("change", (event) => {
+          hourToClassMapping[hour] = event.target.value;
+          localStorage.setItem("hourToClassMapping", JSON.stringify(hourToClassMapping));
+          updateStudentClassSelect();
+          updateStudentEditor();
+          initStartScreen();
+        });
+
+        row.appendChild(label);
+        row.appendChild(select);
+        editor.appendChild(row);
+      });
+    }
+
+    function updatePdfStorageManager() {
+      const select = document.getElementById("pdfClassSelect");
+      const status = document.getElementById("pdfStorageStatus");
+      const addPdfBtn = document.getElementById("addPdfToClassBtn");
+      const addMarkdownFileBtn = document.getElementById("addMarkdownFileBtn");
+      const pasteMarkdownBtn = document.getElementById("pasteMarkdownBtn");
+      const clearSelectedBtn = document.getElementById("clearSelectedPdfBtn");
+      const clearAllBtn = document.getElementById("clearAllPdfsBtn");
+      if (!select || !status) return;
+
+      const storedClasses = [...new Set(assignedClasses)].sort((a, b) => a.localeCompare(b));
+      const classes = [...classOptions];
+      select.innerHTML = "<option value=\"\">-- Select a Class --</option>";
+
+      classes.forEach((className) => {
+        const option = document.createElement("option");
+        option.value = className;
+        option.textContent = storedClasses.includes(className) ? `${className} (stored)` : className;
+        select.appendChild(option);
+      });
+
+      status.textContent = storedClasses.length > 0
+        ? `${storedClasses.length} class${storedClasses.length === 1 ? "" : "es"} with stored lessons.`
+        : "No stored lessons found.";
+
+      if (addPdfBtn) {
+        addPdfBtn.disabled = classes.length === 0;
+        addPdfBtn.style.opacity = classes.length === 0 ? "0.6" : "1";
+        addPdfBtn.style.cursor = classes.length === 0 ? "not-allowed" : "pointer";
+      }
+
+      if (addMarkdownFileBtn) {
+        addMarkdownFileBtn.disabled = classes.length === 0;
+        addMarkdownFileBtn.style.opacity = classes.length === 0 ? "0.6" : "1";
+        addMarkdownFileBtn.style.cursor = classes.length === 0 ? "not-allowed" : "pointer";
+      }
+
+      if (pasteMarkdownBtn) {
+        pasteMarkdownBtn.disabled = classes.length === 0;
+        pasteMarkdownBtn.style.opacity = classes.length === 0 ? "0.6" : "1";
+        pasteMarkdownBtn.style.cursor = classes.length === 0 ? "not-allowed" : "pointer";
+      }
+
+      if (clearSelectedBtn) {
+        clearSelectedBtn.disabled = storedClasses.length === 0;
+        clearSelectedBtn.style.opacity = storedClasses.length === 0 ? "0.6" : "1";
+        clearSelectedBtn.style.cursor = storedClasses.length === 0 ? "not-allowed" : "pointer";
+      }
+
+      if (clearAllBtn) {
+        clearAllBtn.disabled = storedClasses.length === 0;
+        clearAllBtn.style.opacity = storedClasses.length === 0 ? "0.6" : "1";
+        clearAllBtn.style.cursor = storedClasses.length === 0 ? "not-allowed" : "pointer";
+      }
+    }
+
+    function clearSelectedPdf() {
+      const select = document.getElementById("pdfClassSelect");
+      const selectedClass = select ? select.value : "";
+
+      if (!selectedClass) {
+        alert("Select a class first.");
+        return;
+      }
+
+      if (!assignedClasses.includes(selectedClass)) {
+        alert(`No saved lessons found for ${selectedClass}.`);
+        return;
+      }
+
+      if (!confirm(`Clear saved lessons for "${selectedClass}"?`)) {
+        return;
+      }
+
+      const transaction = pdfDb.transaction([pdfEntriesStoreName, pdfStoreName], "readwrite");
+      const entriesStore = transaction.objectStore(pdfEntriesStoreName);
+      const index = entriesStore.index("className");
+      index.openCursor(IDBKeyRange.only(selectedClass)).onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (!cursor) {
+          return;
+        }
+        cursor.delete();
+        cursor.continue();
+      };
+      transaction.objectStore(pdfStoreName).delete(selectedClass);
+
+      transaction.oncomplete = () => {
+        assignedClasses = assignedClasses.filter((className) => className !== selectedClass);
+        localStorage.setItem("lessonCockpitAssigned", JSON.stringify(assignedClasses));
+        initStartScreen();
+        updatePdfStorageManager();
+        alert(`Cleared saved lessons for ${selectedClass}.`);
+      };
+    }
+
+    function clearAllPdfs() {
+      if (!confirm("Clear all saved lessons? This cannot be undone.")) {
+        return;
+      }
+
+      const transaction = pdfDb.transaction([pdfEntriesStoreName, pdfStoreName], "readwrite");
+      transaction.objectStore(pdfEntriesStoreName).clear();
+      transaction.objectStore(pdfStoreName).clear();
+
+      transaction.oncomplete = () => {
+        assignedClasses = [];
+        localStorage.setItem("lessonCockpitAssigned", JSON.stringify(assignedClasses));
+        initStartScreen();
+        updatePdfStorageManager();
+        alert("All saved lessons cleared.");
+      };
+    }
+
+    function updateSoundStatus() {
+      const status = document.getElementById("soundStatus");
+      if (!status) return;
+      status.textContent = positiveFeedbackSoundDataUrl
+        ? "Custom sound selected and saved locally."
+        : "No custom sound selected.";
+    }
+
+    function previewPositiveSound() {
+      if (!positiveFeedbackSoundDataUrl) {
+        alert("No custom sound selected.");
+        return;
+      }
+      playPositiveFeedbackSound();
+    }
+
+    function clearPositiveSound() {
+      if (!confirm("Clear the saved positive feedback sound?")) {
+        return;
+      }
+      positiveFeedbackSoundDataUrl = "";
+      localStorage.removeItem(positiveSoundKey);
+      const input = document.getElementById("positiveSoundInput");
+      if (input) input.value = "";
+      updateSoundStatus();
+    }
+
+    function updateClassEditor() {
+      const textarea = document.getElementById("classListTextarea");
+      if (!textarea) return;
+      textarea.value = classOptions.join("\n");
+    }
+
+    function saveClassList() {
+      const textarea = document.getElementById("classListTextarea");
+      if (!textarea) return;
+
+      const parsed = textarea.value
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+
+      const nextClassOptions = Array.from(new Set(parsed));
+      if (nextClassOptions.length === 0) {
+        alert("Enter at least one class name.");
+        return;
+      }
+
+      classOptions = nextClassOptions;
+
+      Object.keys(hourToClassMapping).forEach((hour) => {
+        if (!classOptions.includes(hourToClassMapping[hour])) {
+          hourToClassMapping[hour] = "";
+        }
+      });
+
+      localStorage.setItem("classOptions", JSON.stringify(classOptions));
+      localStorage.setItem("hourToClassMapping", JSON.stringify(hourToClassMapping));
+
+      closePdfReorderPanel();
+      updateClassEditor();
+      updateHourMappingEditor();
+      updateStudentClassSelect();
+      updateStudentEditor();
+      updatePdfStorageManager();
+      initStartScreen();
+      alert("Class list saved.");
+    }
+
+    function addNewClass() {
+      const newClassName = prompt("Enter new class name:");
+      if (newClassName && newClassName.trim()) {
+        classOptions.push(newClassName.trim());
+        localStorage.setItem("classOptions", JSON.stringify(classOptions));
+        updateClassEditor();
+        updateHourMappingEditor();
+        updateStudentClassSelect();
+      }
+    }
+
+    function renameClass(index, newName) {
+      if (!newName.trim()) {
+        alert("Class name cannot be empty.");
+        updateClassEditor();
+        return;
+      }
+      const oldName = classOptions[index];
+      if (newName !== oldName) {
+        classOptions[index] = newName.trim();
+        
+        // Update hour mappings
+        Object.keys(hourToClassMapping).forEach(hour => {
+          if (hourToClassMapping[hour] === oldName) {
+            hourToClassMapping[hour] = newName.trim();
+          }
+        });
+        
+        localStorage.setItem("classOptions", JSON.stringify(classOptions));
+        localStorage.setItem("hourToClassMapping", JSON.stringify(hourToClassMapping));
+        updateClassEditor();
+        updateHourMappingEditor();
+        updateStudentClassSelect();
+      }
+    }
+
+    function deleteClass(index) {
+      const className = classOptions[index];
+      if (confirm(`Delete class "${className}" and all associated data?`)) {
+        classOptions.splice(index, 1);
+        
+        // Remove from hour mappings
+        Object.keys(hourToClassMapping).forEach(hour => {
+          if (hourToClassMapping[hour] === className) {
+            hourToClassMapping[hour] = "";
+          }
+        });
+        
+        localStorage.setItem("classOptions", JSON.stringify(classOptions));
+        localStorage.setItem("hourToClassMapping", JSON.stringify(hourToClassMapping));
+        updateClassEditor();
+        updateHourMappingEditor();
+        updateStudentClassSelect();
+      }
+    }
+
+    function updateStudentClassSelect() {
+      const select = document.getElementById("studentClassSelect");
+      select.innerHTML = "<option value=\"\">-- Select an Hour --</option>";
+      allHours.forEach((hour) => {
+        const mappedClass = hourToClassMapping[hour] || "Unassigned";
+        const option = document.createElement("option");
+        option.value = hour;
+        option.textContent = `${hour} (${mappedClass})`;
+        select.appendChild(option);
+      });
+    }
+
+    function updateStudentEditor() {
+      const select = document.getElementById("studentClassSelect");
+      const selectedHour = select.value;
+      const textarea = document.getElementById("studentListTextarea");
+      const saveBtn = document.getElementById("saveStudentsBtn");
+      
+      if (!selectedHour) {
+        if (textarea) textarea.value = "";
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.style.opacity = "0.6";
+          saveBtn.style.cursor = "not-allowed";
+        }
+        return;
+      }
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = "1";
+        saveBtn.style.cursor = "pointer";
+      }
+
+      const students = hourRosters[selectedHour] || [];
+      if (textarea) textarea.value = students.join("\n");
+    }
+
+    function saveStudentsForHour() {
+      const select = document.getElementById("studentClassSelect");
+      const selectedHour = select ? select.value : "";
+      if (!selectedHour) {
+        alert("Select an hour first.");
+        return;
+      }
+
+      const textarea = document.getElementById("studentListTextarea");
+      if (!textarea) return;
+
+      const students = textarea.value
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+
+      hourRosters[selectedHour] = students;
+      localStorage.setItem(hourRosterKey, JSON.stringify(hourRosters));
+
+      if (currentHour === selectedHour) {
+        resetColdCallRotation();
+      }
+
+      updateStudentEditor();
+      alert(`Saved ${students.length} student${students.length === 1 ? "" : "s"} for ${selectedHour}.`);
+    }
+
+    function addNewStudent() {
+      const select = document.getElementById("studentClassSelect");
+      const selectedHour = select.value;
+      if (!selectedHour) return;
+      
+      const newStudentName = prompt("Enter student name:");
+      if (newStudentName && newStudentName.trim()) {
+        if (!hourRosters[selectedHour]) {
+          hourRosters[selectedHour] = [];
+        }
+        hourRosters[selectedHour].push(newStudentName.trim());
+        localStorage.setItem(hourRosterKey, JSON.stringify(hourRosters));
+        updateStudentEditor();
+      }
+    }
+
+    function renameStudent(hour, index, newName) {
+      if (!newName.trim()) {
+        alert("Student name cannot be empty.");
+        updateStudentEditor();
+        return;
+      }
+      hourRosters[hour][index] = newName.trim();
+      localStorage.setItem(hourRosterKey, JSON.stringify(hourRosters));
+      updateStudentEditor();
+    }
+
+    function deleteStudent(hour, index) {
+      if (confirm(`Remove this student?`)) {
+        hourRosters[hour].splice(index, 1);
+        localStorage.setItem(hourRosterKey, JSON.stringify(hourRosters));
+        updateStudentEditor();
+      }
+    }
+
+    function openBehaviorReport() {
+      document.getElementById("adminScreen").classList.add("hidden");
+      document.getElementById("reportScreen").classList.remove("hidden");
+      
+      // Set date filters to today and 30 days ago
+      const today = new Date().toISOString().split("T")[0];
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      
+      document.getElementById("filterDateFrom").value = thirtyDaysAgo;
+      document.getElementById("filterDateTo").value = today;
+      
+      // Populate class filter
+      const classFilter = document.getElementById("filterClass");
+      classFilter.innerHTML = "<option value=\"\">All Classes</option>";
+      classOptions.forEach(className => {
+        const option = document.createElement("option");
+        option.value = className;
+        option.textContent = className;
+        classFilter.appendChild(option);
+      });
+      
+      updateBehaviorReport();
+    }
+
+    function getFilteredBehaviors() {
+      const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
+      const dateFrom = document.getElementById("filterDateFrom").value;
+      const dateTo = document.getElementById("filterDateTo").value;
+      const filterClass = document.getElementById("filterClass").value;
+      const filterStudent = document.getElementById("filterStudent").value.toLowerCase();
+      const filterType = document.getElementById("filterType").value;
+
+      return logs.filter(log => {
+        const logDate = log.timestamp.split("T")[0];
+        const matchDate = (!dateFrom || logDate >= dateFrom) && (!dateTo || logDate <= dateTo);
+        const matchClass = !filterClass || log.class === filterClass;
+        const matchStudent = !filterStudent || log.student.toLowerCase().includes(filterStudent);
+        const matchType = !filterType || log.type === filterType;
+        
+        return matchDate && matchClass && matchStudent && matchType;
+      });
+    }
+
+    function updateBehaviorReport() {
+      const filtered = getFilteredBehaviors();
+      
+      // Calculate stats
+      const totalEntries = filtered.length;
+      const positiveCount = filtered.filter(log => log.type === "positive").length;
+      const negativeCount = filtered.filter(log => log.type === "negative").length;
+      const uniqueStudents = new Set(filtered.map((log) => log.student)).size;
+
+      // Render stats
+      const statsContainer = document.getElementById("reportStats");
+      statsContainer.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${totalEntries}</div>
+          <div class="stat-label">Total Entries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: #34c759;">${positiveCount}</div>
+          <div class="stat-label">Positive</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: #ff3b30;">${negativeCount}</div>
+          <div class="stat-label">Negative</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: #007AFF;">${uniqueStudents}</div>
+          <div class="stat-label">Students</div>
+        </div>
+      `;
+
+      // Render entries
+      const entriesContainer = document.getElementById("behaviorEntries");
+      
+      if (filtered.length === 0) {
+        entriesContainer.innerHTML = '<div class="report-empty">No behavior entries found.</div>';
+        return;
+      }
+
+      entriesContainer.innerHTML = filtered
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .map(log => {
+          const date = new Date(log.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+          const time = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const categoryClass = log.type === "positive" ? "behavior-positive" : "behavior-negative";
+          const hour = log.hour || "";
+          return `
+            <div class="behavior-entry-report">
+              <div class="behavior-entry-date">${date} ${time}</div>
+              <div class="behavior-entry-student">${log.student}</div>
+              <div class="behavior-entry-hour">${hour}</div>
+              <div class="behavior-entry-class">${log.class}</div>
+              <div class="behavior-entry-category ${categoryClass}">${log.category}</div>
+              <div class="behavior-type">${log.type}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function exportBehaviorReport() {
+      const filtered = getFilteredBehaviors();
+      
+      if (filtered.length === 0) {
+        alert("No data to export.");
+        return;
+      }
+
+      const headers = ["Date", "Time", "Student", "Class", "Hour", "Category", "Type"];
+      const rows = filtered
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .map(log => {
+          const date = new Date(log.timestamp).toLocaleDateString("en-US");
+          const time = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          return [date, time, log.student, log.class, log.hour || "", log.category, log.type];
+        });
+
+      const csv = [
+        headers.join(","),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `behavior-report-${new Date().toISOString().split("T")[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearAllBehaviors() {
+      if (confirm("Clear all behavior logs? This cannot be undone. Make sure you've exported the data first.")) {
+        localStorage.removeItem(logKey);
+        updateBehaviorReport();
+        alert("All behavior logs cleared.");
+      }
+    }
+
+    initDB().then(() => {
+      initAnnotationOverlay();
+
+      const positiveSoundInput = document.getElementById("positiveSoundInput");
+      if (positiveSoundInput) {
+        positiveSoundInput.addEventListener("change", (event) => {
+          const file = event.target.files && event.target.files[0];
+          if (!file) {
+            return;
+          }
+          if (!file.type.startsWith("audio/")) {
+            alert("Please choose an audio file.");
+            event.target.value = "";
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              positiveFeedbackSoundDataUrl = String(reader.result || "");
+              localStorage.setItem(positiveSoundKey, positiveFeedbackSoundDataUrl);
+              updateSoundStatus();
+              alert("Positive feedback sound saved locally.");
+            } catch (error) {
+              alert("Unable to save sound locally. Try a smaller file.");
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      syncPdfClassMetadataFromDb().then(() => {
+        const needsSetup = Object.keys(hourToClassMapping).length === 0;
+        if (needsSetup) {
+          initSetupScreen();
+        } else {
+          restoreLessonSession().then((restored) => {
+            if (!restored) {
+              initStartScreen();
+            }
+          });
+        }
+      });
+
+      document.getElementById("positiveCustomInput").addEventListener("keypress", (event) => {
+        if (event.key === "Enter" && event.target.value.trim()) {
+          selectBehavior("positive", event.target.value.trim());
+          event.target.value = "";
+        }
+      });
+
+      document.getElementById("negativeCustomInput").addEventListener("keypress", (event) => {
+        if (event.key === "Enter" && event.target.value.trim()) {
+          selectBehavior("negative", event.target.value.trim());
+          event.target.value = "";
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        const targetTag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : "";
+        if (targetTag === "input" || targetTag === "textarea" || (event.target && event.target.isContentEditable)) {
+          return;
+        }
+
+        const lessonPage = document.getElementById("lessonPage");
+        if (!lessonPage || lessonPage.classList.contains("hidden")) {
+          return;
+        }
+
+        const key = String(event.key || "").toLowerCase();
+        if (key === "p") {
+          setAnnotationTool("pen");
+          event.preventDefault();
+          return;
+        }
+        if (key === "e") {
+          setAnnotationTool("eraser");
+          event.preventDefault();
+          return;
+        }
+        if (key === "h") {
+          setAnnotationTool("highlighter");
+          event.preventDefault();
+          return;
+        }
+        if (key === "u") {
+          undoAnnotation();
+          event.preventDefault();
+          return;
+        }
+
+        if (event.key === "ArrowLeft") {
+          showPreviousPdf();
+          event.preventDefault();
+        } else if (event.key === "ArrowRight") {
+          showNextPdf();
+          event.preventDefault();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
