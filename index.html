@@ -17,9 +17,7 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       background: #f5f5f7;
-      color: #1d1d1f;
       overflow: hidden;
     }
 
@@ -102,10 +100,6 @@
       transform: scale(1.02);
     }
 
-    .class-btn:active {
-      transform: scale(0.98);
-    }
-
     .class-btn-assigned {
       background: #34c759 !important;
       color: white !important;
@@ -116,6 +110,42 @@
       border-color: #2fa846 !important;
       background: #2fa846 !important;
       box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3) !important;
+    }
+
+    .quick-add-row {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .quick-add-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid #d2d2d7;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      background: #fff;
+    }
+
+    .quick-add-btn {
+      border: none;
+      border-radius: 12px;
+      background: #34c759;
+      color: #fff;
+      font-weight: 700;
+      padding: 12px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .quick-add-btn:hover {
+      background: #2fa846;
+    }
+
+    .quick-add-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     .pdf-input-wrapper {
@@ -375,15 +405,15 @@
 
     .annotation-toolbar {
       position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
+      left: 8px;
+      top: 8px;
+      transform: none;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 4px;
       z-index: 140;
-      padding: 10px;
-      border-radius: 14px;
+      padding: 5px;
+      border-radius: 8px;
       background: rgba(255, 255, 255, 0.68);
       border: 1px solid rgba(210, 210, 215, 0.9);
       backdrop-filter: blur(8px);
@@ -391,6 +421,13 @@
       opacity: 0.45;
       transition: opacity 0.18s ease;
       pointer-events: auto;
+      align-items: center;
+      max-width: min(calc(100% - 28px), 820px);
+    }
+
+    .annotation-toolbar.position-bottom {
+      top: auto;
+      bottom: 8px;
     }
 
     .annotation-toolbar:hover,
@@ -399,16 +436,16 @@
     }
 
     .annotation-btn {
-      min-width: 38px;
-      min-height: 34px;
-      border-radius: 10px;
+      min-width: 20px;
+      min-height: 18px;
+      border-radius: 6px;
       border: 1px solid #d2d2d7;
       background: white;
       color: #1d1d1f;
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 700;
       cursor: pointer;
-      padding: 6px 8px;
+      padding: 3px 5px;
       text-align: center;
     }
 
@@ -426,24 +463,29 @@
     .annotation-divider {
       height: 1px;
       background: #d2d2d7;
-      margin: 2px 0;
+      margin: 1px 0;
     }
 
     .annotation-color-row {
       display: flex;
-      gap: 6px;
+      gap: 4px;
+    }
+
+    .annotation-toolbar-spacer {
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     .annotation-color-btn {
-      width: 22px;
-      height: 22px;
+      width: 12px;
+      height: 12px;
       border-radius: 999px;
-      border: 2px solid white;
+      border: 1px solid white;
       box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
       cursor: pointer;
       padding: 0;
-      min-width: 22px;
-      min-height: 22px;
+      min-width: 12px;
+      min-height: 12px;
     }
 
     .annotation-color-btn.active {
@@ -1508,6 +1550,7 @@
       <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
       <div id="annotationToolbar" class="annotation-toolbar">
         <button id="annotationModeBtn" class="annotation-btn" onclick="toggleAnnotationMode()">Annotation OFF</button>
+        <button id="annotationPositionBtn" class="annotation-btn" onclick="toggleAnnotationToolbarPosition()">Toolbar Bottom</button>
         <div class="annotation-divider"></div>
         <button id="annotationPenBtn" class="annotation-btn" onclick="setAnnotationTool('pen')">Pen</button>
         <button id="annotationHighlighterBtn" class="annotation-btn" onclick="setAnnotationTool('highlighter')">HL</button>
@@ -1517,6 +1560,7 @@
           <button id="annotationColorBlue" class="annotation-color-btn" style="background: #007AFF;" onclick="setAnnotationColor('#007AFF')" aria-label="Blue pen"></button>
           <button id="annotationColorBlack" class="annotation-color-btn" style="background: #1d1d1f;" onclick="setAnnotationColor('#1d1d1f')" aria-label="Black pen"></button>
         </div>
+        <div class="annotation-toolbar-spacer"></div>
         <div class="annotation-divider"></div>
         <button class="annotation-btn" onclick="undoAnnotation()">Undo</button>
         <button class="annotation-btn" onclick="clearAnnotations(false)">Clear</button>
@@ -1559,6 +1603,10 @@
       </div>
       <div id="studentSelector" style="display: none;">
         <div class="log-section-title">Select Student</div>
+        <div class="quick-add-row">
+          <input type="text" id="quickAddStudentInput" class="quick-add-input" placeholder="Add a student quickly" onkeydown="handleQuickAddStudentKey(event)" />
+          <button id="quickAddStudentBtn" class="quick-add-btn" onclick="quickAddStudentFromPicker()">Quick Add</button>
+        </div>
         <div class="student-grid" id="studentGrid"></div>
         <button class="view-log-btn" onclick="cancelBehavior()">Cancel</button>
       </div>
@@ -1673,6 +1721,8 @@
     let markdownUploadTargetClass = null;
     let markdownTouchStartX = null;
     let annotationMode = false;
+    const annotationToolbarPositionKey = "lessonCockpitAnnotationToolbarPosition";
+    let annotationToolbarPosition = localStorage.getItem(annotationToolbarPositionKey) || "top";
     let annotationTool = "pen";
     let annotationColor = "#1d1d1f";
     let annotationStrokes = [];
@@ -2633,6 +2683,7 @@
 
     function updateAnnotationToolbarState() {
       const modeBtn = document.getElementById("annotationModeBtn");
+      const positionBtn = document.getElementById("annotationPositionBtn");
       const penBtn = document.getElementById("annotationPenBtn");
       const highlighterBtn = document.getElementById("annotationHighlighterBtn");
       const eraserBtn = document.getElementById("annotationEraserBtn");
@@ -2644,11 +2695,16 @@
 
       if (toolbar) {
         toolbar.classList.toggle("active", annotationMode);
+        toolbar.classList.toggle("position-bottom", annotationToolbarPosition === "bottom");
       }
 
       if (modeBtn) {
         modeBtn.classList.toggle("mode-on", annotationMode);
         modeBtn.textContent = annotationMode ? "Annotation ON" : "Annotation OFF";
+      }
+
+      if (positionBtn) {
+        positionBtn.textContent = annotationToolbarPosition === "bottom" ? "Toolbar Top" : "Toolbar Bottom";
       }
 
       if (penBtn) penBtn.classList.toggle("active", annotationTool === "pen");
@@ -2677,6 +2733,12 @@
 
     function toggleAnnotationMode() {
       setAnnotationMode(!annotationMode);
+    }
+
+    function toggleAnnotationToolbarPosition() {
+      annotationToolbarPosition = annotationToolbarPosition === "bottom" ? "top" : "bottom";
+      localStorage.setItem(annotationToolbarPositionKey, annotationToolbarPosition);
+      updateAnnotationToolbarState();
     }
 
     function setAnnotationTool(tool) {
@@ -3013,8 +3075,19 @@
 
     function populateStudentGrid() {
       const grid = document.getElementById("studentGrid");
+      const quickAddInput = document.getElementById("quickAddStudentInput");
+      const quickAddBtn = document.getElementById("quickAddStudentBtn");
       grid.innerHTML = "";
       const students = hourRosters[currentHour] || [];
+
+      if (quickAddInput) {
+        quickAddInput.value = "";
+        quickAddInput.disabled = !currentHour;
+      }
+
+      if (quickAddBtn) {
+        quickAddBtn.disabled = !currentHour;
+      }
 
       students.forEach((studentName) => {
         const button = document.createElement("button");
@@ -3023,6 +3096,59 @@
         button.onclick = () => logBehavior(studentName);
         grid.appendChild(button);
       });
+    }
+
+    function addStudentToHour(hour, studentName) {
+      const trimmedName = (studentName || "").trim();
+      if (!hour) {
+        alert("Select an hour first.");
+        return false;
+      }
+
+      if (!trimmedName) {
+        alert("Enter a student name.");
+        return false;
+      }
+
+      if (!hourRosters[hour]) {
+        hourRosters[hour] = [];
+      }
+
+      if (hourRosters[hour].includes(trimmedName)) {
+        alert(`${trimmedName} is already in ${hour}.`);
+        return false;
+      }
+
+      hourRosters[hour].push(trimmedName);
+      localStorage.setItem(hourRosterKey, JSON.stringify(hourRosters));
+
+      if (currentHour === hour) {
+        resetColdCallRotation();
+      }
+
+      const adminHourSelect = document.getElementById("studentClassSelect");
+      if (adminHourSelect && adminHourSelect.value === hour) {
+        updateStudentEditor();
+      }
+
+      return true;
+    }
+
+    function quickAddStudentFromPicker() {
+      const input = document.getElementById("quickAddStudentInput");
+      if (!input) return;
+
+      if (addStudentToHour(currentHour, input.value)) {
+        input.value = "";
+        populateStudentGrid();
+        input.focus();
+      }
+    }
+
+    function handleQuickAddStudentKey(event) {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      quickAddStudentFromPicker();
     }
 
     function logBehavior(studentName) {
@@ -3530,12 +3656,9 @@
       
       const newStudentName = prompt("Enter student name:");
       if (newStudentName && newStudentName.trim()) {
-        if (!hourRosters[selectedHour]) {
-          hourRosters[selectedHour] = [];
+        if (addStudentToHour(selectedHour, newStudentName)) {
+          updateStudentEditor();
         }
-        hourRosters[selectedHour].push(newStudentName.trim());
-        localStorage.setItem(hourRosterKey, JSON.stringify(hourRosters));
-        updateStudentEditor();
       }
     }
 
