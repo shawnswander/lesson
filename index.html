@@ -2,22 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lesson Cockpit</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <style>
     * {
       box-sizing: border-box;
-      -webkit-user-select: none;
-      user-select: none;
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
+    html,
+    body {
       width: 100%;
       height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background: #f5f5f7;
+      color: #1d1d1f;
       overflow: hidden;
     }
 
@@ -197,9 +199,10 @@
 
     .lesson-header-left {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
     }
 
     .lesson-header-info {
@@ -237,6 +240,18 @@
       background: #d2d2d7;
     }
 
+    .lesson-header-left .return-btn {
+      width: 40px;
+      min-width: 40px;
+      height: 40px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+    }
+
     .class-title {
       font-size: 20px;
       font-weight: 700;
@@ -267,10 +282,38 @@
       z-index: 1;
     }
 
-    .pdf-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    .pdf-viewer {
+      position: absolute;
+      inset: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px;
+      background: #eef1f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .pdf-page-canvas {
+      display: block;
+      width: min(100%, 1100px);
+      height: auto;
+      background: #fff;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+      border-radius: 8px;
+    }
+
+    .pdf-loading,
+    .pdf-error {
+      width: min(100%, 720px);
+      padding: 18px 20px;
+      border-radius: 12px;
+      background: #fff;
+      color: #1d1d1f;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+      font-size: 15px;
+      line-height: 1.45;
     }
 
     .markdown-viewer {
@@ -500,7 +543,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      z-index: 120;
+      z-index: 160;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
@@ -855,6 +898,47 @@
 
     .log-entry-category {
       color: #6e6e73;
+    }
+
+    .log-entry-points {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #b91c1c;
+    }
+
+    .log-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .log-summary-card {
+      padding: 12px;
+      border: 1px solid #e8e8ed;
+      border-radius: 10px;
+      background: #f9f9fb;
+    }
+
+    .log-summary-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #6e6e73;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .log-summary-line {
+      font-size: 13px;
+      color: #1d1d1f;
+      margin-bottom: 6px;
+    }
+
+    .log-summary-line:last-child {
+      margin-bottom: 0;
     }
 
     .empty-log {
@@ -1355,6 +1439,36 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    .warning-banner {
+      position: absolute;
+      left: 50%;
+      bottom: 76px;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-width: min(calc(100% - 32px), 920px);
+      z-index: 135;
+      pointer-events: none;
+    }
+
+    .warning-banner.hidden {
+      display: none !important;
+    }
+
+    .warning-banner-chip {
+      background: rgba(255, 149, 0, 0.94);
+      color: white;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+      white-space: nowrap;
+    }
+
     @media (max-width: 600px) {
       .class-grid {
         grid-template-columns: 1fr;
@@ -1366,6 +1480,15 @@
 
       .log-panel {
         max-width: 100%;
+      }
+
+      .warning-banner {
+        bottom: 68px;
+      }
+
+      .warning-banner-chip {
+        font-size: 12px;
+        padding: 9px 13px;
       }
     }
   </style>
@@ -1430,7 +1553,7 @@
 
   <!-- Admin Screen -->
   <div id="adminScreen" class="hidden">
-    <button class="admin-back-btn" onclick="returnToStart()">← Back to Lessons</button>
+    <button class="admin-back-btn" onclick="returnToStart()">Back to Lessons</button>
     
     <div class="admin-section">
       <div class="admin-section-title">Manage Classes</div>
@@ -1482,7 +1605,7 @@
   <div id="reportScreen" class="hidden">
     <div class="report-header">
       <h1 class="title" style="margin: 0;">Behavior Report</h1>
-      <button class="admin-back-btn" onclick="returnToStart()">← Back</button>
+      <button class="admin-back-btn" onclick="returnToStart()">Back</button>
     </div>
 
     <div class="report-filters">
@@ -1513,8 +1636,8 @@
         </select>
       </div>
       <div class="report-filter-group" style="align-self: flex-end;">
-        <button class="export-btn" onclick="exportBehaviorReport()">📥 Export CSV</button>
-        <button class="export-btn" onclick="clearAllBehaviors()" style="background: #ff3b30; margin-left: 8px;">🗑️ Clear All</button>
+        <button class="export-btn" onclick="exportBehaviorReport()">Export CSV</button>
+        <button class="export-btn" onclick="clearAllBehaviors()" style="background: #ff3b30; margin-left: 8px;">Clear All</button>
       </div>
     </div>
 
@@ -1526,12 +1649,12 @@
   <div id="lessonPage" class="hidden">
     <div class="lesson-header">
       <div class="lesson-header-left">
-        <button class="return-btn" onclick="returnToStart()">← Back</button>
-        <button class="return-btn" id="prevPdfBtn" onclick="showPreviousPdf()">◀ Prev</button>
-        <button class="return-btn" id="nextPdfBtn" onclick="showNextPdf()">Next ▶</button>
-        <button class="return-btn" onclick="triggerColdCall()">Cold Call</button>
-        <button class="return-btn" onclick="openLogPanel()">Log</button>
-        <button class="return-btn" onclick="hideControls()">Hide Controls</button>
+        <button class="return-btn" onclick="returnToStart()" title="Back" aria-label="Back">&#8592;</button>
+        <button class="return-btn" id="prevPdfBtn" onclick="showPreviousPdf()" title="Previous" aria-label="Previous">&#9664;</button>
+        <button class="return-btn" id="nextPdfBtn" onclick="showNextPdf()" title="Next" aria-label="Next">&#9654;</button>
+        <button class="return-btn" onclick="triggerColdCall()" title="Cold Call" aria-label="Cold Call">&#127922;</button>
+        <button class="return-btn" onclick="openLogPanel()" title="Log" aria-label="Log">+</button>
+        <button class="return-btn" onclick="hideControls()" title="Hide Controls" aria-label="Hide Controls">&#128065;</button>
       </div>
       <div class="lesson-header-info">
         <div class="lesson-hour" id="lessonHourName"></div>
@@ -1541,13 +1664,14 @@
     </div>
     <div class="pdf-container">
       <div class="lesson-layer" id="lessonLayer">
-        <iframe id="pdfViewer"></iframe>
+        <div id="pdfViewer" class="pdf-viewer"></div>
         <div id="markdownViewer" class="markdown-viewer hidden">
           <div id="markdownSlide" class="markdown-slide"></div>
           <div id="markdownSlideIndicator" class="markdown-slide-indicator"></div>
         </div>
       </div>
       <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+      <div id="warningBanner" class="warning-banner hidden"></div>
       <div id="annotationToolbar" class="annotation-toolbar">
         <button id="annotationModeBtn" class="annotation-btn" onclick="toggleAnnotationMode()">Annotation OFF</button>
         <button id="annotationPositionBtn" class="annotation-btn" onclick="toggleAnnotationToolbarPosition()">Toolbar Bottom</button>
@@ -1566,11 +1690,11 @@
         <button class="annotation-btn" onclick="clearAnnotations(false)">Clear</button>
       </div>
       <div class="floating-controls" id="floatingControls" ontouchstart="activateFloatingControls()">
-        <button class="floating-control-btn" onclick="showPreviousPdf()" title="Previous" aria-label="Previous"><span class="floating-control-icon">◀</span></button>
-        <button class="floating-control-btn" onclick="showNextPdf()" title="Next" aria-label="Next"><span class="floating-control-icon">▶</span></button>
-        <button class="floating-control-btn" onclick="triggerColdCall()" title="Cold Call" aria-label="Cold Call"><span class="floating-control-icon">🎲</span></button>
-        <button class="floating-control-btn" onclick="openLogPanel()" title="Log" aria-label="Log"><span class="floating-control-icon">＋</span></button>
-        <button class="floating-control-btn" onclick="showControls()" title="Show Controls" aria-label="Show Controls"><span class="floating-control-icon">👁</span></button>
+        <button class="floating-control-btn" onclick="handleFloatingControlClick(showPreviousPdf)" title="Previous" aria-label="Previous"><span class="floating-control-icon">&#9664;</span></button>
+        <button class="floating-control-btn" onclick="handleFloatingControlClick(showNextPdf)" title="Next" aria-label="Next"><span class="floating-control-icon">&#9654;</span></button>
+        <button class="floating-control-btn" onclick="handleFloatingControlClick(triggerColdCall)" title="Cold Call" aria-label="Cold Call"><span class="floating-control-icon">&#127922;</span></button>
+        <button class="floating-control-btn" onclick="handleFloatingControlClick(openLogPanel)" title="Log" aria-label="Log"><span class="floating-control-icon">+</span></button>
+        <button class="floating-control-btn" onclick="handleFloatingControlClick(showControls)" title="Show Controls" aria-label="Show Controls"><span class="floating-control-icon">&#128065;</span></button>
       </div>
     </div>
   </div>
@@ -1579,7 +1703,7 @@
   <div class="log-panel" id="logPanel">
     <div class="log-panel-header">
       <h2 class="log-panel-title">Log Behavior</h2>
-      <button class="close-log-btn" onclick="closeLogPanel()">✕</button>
+      <button class="close-log-btn" onclick="closeLogPanel()">&times;</button>
     </div>
     <div class="log-panel-content">
       <div id="behaviorSelector">
@@ -1594,8 +1718,10 @@
         <div class="log-section">
           <div class="log-section-title">Negative</div>
           <div class="behavior-options">
-            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Disruption')">Disruption</button>
-            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Disrespect')">Disrespect</button>
+            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Talking', 1)" title="Talking to others during instruction or work time">Talking 1</button>
+            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Out of Seat', 1)" title="Out of seat without permission">Out of Seat 1</button>
+            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Ignored Directions', 2)" title="Did not follow directions after being given a clear direction">Ignored Directions 2</button>
+            <button class="behavior-btn negative" onclick="selectBehavior('negative', 'Off Task', 1)" title="Off task, distracted, or not working on the assigned task">Off Task 1</button>
           </div>
           <input type="text" id="negativeCustomInput" class="behavior-text-input" placeholder="Other negative..." />
         </div>
@@ -1617,9 +1743,10 @@
   <div class="log-modal" id="logModal">
     <div class="log-modal-content">
       <div class="log-modal-header">
-        <h2 class="log-modal-title">Today's Log</h2>
+        <h2 class="log-modal-title" id="logModalTitle">Today's Log</h2>
         <button class="close-modal-btn" onclick="closeLogViewer()">✕</button>
       </div>
+      <div class="log-summary" id="logSummary"></div>
       <div class="log-entries" id="logEntries"></div>
     </div>
   </div>
@@ -1633,7 +1760,7 @@
     <div class="markdown-modal-content">
       <h3 class="markdown-modal-title">Paste Markdown Lesson</h3>
       <input id="markdownLessonTitle" class="markdown-modal-field" type="text" placeholder="Lesson title" />
-      <textarea id="markdownLessonContent" class="markdown-modal-textarea" placeholder="# Bellwork&#10;&#10;What equation relates force, mass, and acceleration?&#10;&#10;---&#10;&#10;# Newton's Second Law&#10;&#10;$$ F = ma $$&#10;&#10;Force is proportional to acceleration.&#10;&#10;---&#10;&#10;# Practice&#10;&#10;A 5 kg object accelerates at 2 m/s².&#10;&#10;Find the net force."></textarea>
+      <textarea id="markdownLessonContent" class="markdown-modal-textarea" placeholder="# Bellwork&#10;&#10;What equation relates force, mass, and acceleration?&#10;&#10;---&#10;&#10;# Newton's Second Law&#10;&#10;$$ F = ma $$&#10;&#10;Force is proportional to acceleration.&#10;&#10;---&#10;&#10;# Practice&#10;&#10;A 5 kg object accelerates at 2 m/s^2.&#10;&#10;Find the net force."></textarea>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         <button class="add-class-btn" onclick="savePastedMarkdownLesson()" style="background: #34c759;">Save Lesson</button>
         <button class="add-class-btn" onclick="closeMarkdownPasteModal()" style="background: #8e8e93;">Cancel</button>
@@ -1644,6 +1771,7 @@
   <div class="positive-banner" id="positiveBanner"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <script>
@@ -1692,9 +1820,10 @@
 
     let currentClass = null;
     let currentHour = null;
-    let currentPdfUrl = null;
     let selectedBehavior = null;
     let selectedBehaviorType = null;
+    let selectedBehaviorPoints = 0;
+    let activeBehaviorWarnings = {};
     const logKey = "lessonCockpitLogs";
     const lessonSessionKey = "lessonCockpitSession";
     const pdfDbName = "lessonCockpitDB";
@@ -1728,10 +1857,89 @@
     let annotationStrokes = [];
     let activeStroke = null;
     let activePointerId = null;
+    let currentPdfLoadToken = 0;
     let sessionRestoreInProgress = false;
+
+    function clearPdfViewer() {
+      const viewer = document.getElementById("pdfViewer");
+      if (!viewer) {
+        return null;
+      }
+      viewer.innerHTML = "";
+      viewer.scrollTop = 0;
+      viewer.scrollLeft = 0;
+      return viewer;
+    }
+
+    async function renderPdfDocument(blob, loadToken) {
+      const viewer = clearPdfViewer();
+      if (!viewer) {
+        return;
+      }
+
+      if (!window.pdfjsLib || !window.pdfjsLib.getDocument) {
+        viewer.innerHTML = '<div class="pdf-error">PDF rendering library did not load.</div>';
+        return;
+      }
+
+      viewer.innerHTML = '<div class="pdf-loading">Loading PDF...</div>';
+
+      try {
+        const data = await blob.arrayBuffer();
+        if (loadToken !== currentPdfLoadToken) {
+          return;
+        }
+
+        const loadingTask = window.pdfjsLib.getDocument({ data });
+        const pdf = await loadingTask.promise;
+        if (loadToken !== currentPdfLoadToken) {
+          return;
+        }
+
+        viewer.innerHTML = "";
+
+        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+          const page = await pdf.getPage(pageNumber);
+          if (loadToken !== currentPdfLoadToken) {
+            return;
+          }
+
+          const baseViewport = page.getViewport({ scale: 1 });
+          const maxWidth = Math.min(viewer.clientWidth || 1100, 1100);
+          const scale = Math.min(2, Math.max(1, maxWidth / baseViewport.width));
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          canvas.className = "pdf-page-canvas";
+          const context = canvas.getContext("2d");
+          const outputScale = window.devicePixelRatio || 1;
+
+          canvas.width = Math.floor(viewport.width * outputScale);
+          canvas.height = Math.floor(viewport.height * outputScale);
+          canvas.style.width = `${Math.floor(viewport.width)}px`;
+          canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+          context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+          viewer.appendChild(canvas);
+
+          await page.render({ canvasContext: context, viewport }).promise;
+        }
+
+        viewer.scrollTop = 0;
+        viewer.scrollLeft = 0;
+      } catch (error) {
+        if (loadToken !== currentPdfLoadToken) {
+          return;
+        }
+        viewer.innerHTML = '<div class="pdf-error">Unable to display this PDF. Try re-adding the file if the problem continues.</div>';
+      }
+    }
 
     if (window.marked && typeof window.marked.setOptions === "function") {
       window.marked.setOptions({ gfm: true, breaks: true });
+    }
+
+    if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
     }
 
     function initDB() {
@@ -2147,8 +2355,8 @@
           <div class="pdf-order-item">
             <div class="pdf-order-name">${index + 1}. [${type}] ${name}</div>
             <div class="pdf-order-controls">
-              <button class="pdf-order-btn" onclick="movePdfOrder(${index}, -1)" ${index === 0 ? "disabled" : ""}>↑</button>
-              <button class="pdf-order-btn" onclick="movePdfOrder(${index}, 1)" ${index === reorderPdfRecords.length - 1 ? "disabled" : ""}>↓</button>
+              <button class="pdf-order-btn" onclick="movePdfOrder(${index}, -1)" ${index === 0 ? "disabled" : ""}>Up</button>
+              <button class="pdf-order-btn" onclick="movePdfOrder(${index}, 1)" ${index === reorderPdfRecords.length - 1 ? "disabled" : ""}>Down</button>
             </div>
           </div>
         `;
@@ -2320,6 +2528,7 @@
       document.getElementById("lessonClassName").textContent = currentClass;
       clearAnnotations(false);
       currentClassPdfIndex = Math.min(Math.max(startIndex, 0), currentClassPdfRecords.length - 1);
+      updateBehaviorWarningBanner();
       showCurrentLessonPdf();
       updatePdfNavigationState();
       showControls();
@@ -2334,12 +2543,11 @@
         return;
       }
 
+      const loadToken = ++currentPdfLoadToken;
+
       const lessonType = record.type === "markdown" ? "markdown" : "pdf";
       if (lessonType === "markdown") {
-        if (currentPdfUrl) {
-          URL.revokeObjectURL(currentPdfUrl);
-          currentPdfUrl = null;
-        }
+        clearPdfViewer();
         renderMarkdownLesson(record);
         updatePdfNavigationState();
         return;
@@ -2354,16 +2562,13 @@
         return;
       }
 
-      if (currentPdfUrl) {
-        URL.revokeObjectURL(currentPdfUrl);
-      }
-
-      currentPdfUrl = URL.createObjectURL(record.blob);
-      document.getElementById("pdfViewer").src = currentPdfUrl;
+      clearPdfViewer();
       currentMarkdownSlides = [];
       currentMarkdownSlideIndex = 0;
       updatePdfNavigationState();
       persistLessonSession();
+
+      renderPdfDocument(record.blob, loadToken);
     }
 
     function splitMarkdownSlides(content) {
@@ -2380,7 +2585,7 @@
       const markdownViewer = document.getElementById("markdownViewer");
 
       if (pdfViewer) {
-        pdfViewer.src = "";
+        pdfViewer.innerHTML = "";
         pdfViewer.classList.add("hidden");
       }
       if (markdownViewer) markdownViewer.classList.remove("hidden");
@@ -2735,6 +2940,15 @@
       setAnnotationMode(!annotationMode);
     }
 
+    function handleFloatingControlClick(action) {
+      if (annotationMode) {
+        setAnnotationMode(false);
+      }
+      if (typeof action === "function") {
+        action();
+      }
+    }
+
     function toggleAnnotationToolbarPosition() {
       annotationToolbarPosition = annotationToolbarPosition === "bottom" ? "top" : "bottom";
       localStorage.setItem(annotationToolbarPositionKey, annotationToolbarPosition);
@@ -2764,6 +2978,14 @@
       redrawAnnotations();
     }
 
+    function getFloatingControlButtonAtPoint(clientX, clientY) {
+      const buttons = Array.from(document.querySelectorAll("#floatingControls .floating-control-btn"));
+      return buttons.find((button) => {
+        const rect = button.getBoundingClientRect();
+        return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+      }) || null;
+    }
+
     function undoAnnotation() {
       if (annotationStrokes.length === 0) return;
       annotationStrokes.pop();
@@ -2778,6 +3000,14 @@
 
       const canvas = getAnnotationCanvas();
       if (!canvas) return;
+
+      const floatingControlButton = getFloatingControlButtonAtPoint(event.clientX, event.clientY);
+      if (floatingControlButton) {
+        event.preventDefault();
+        setAnnotationMode(false);
+        floatingControlButton.click();
+        return;
+      }
 
       event.preventDefault();
       const point = getCanvasPoint(event);
@@ -2846,12 +3076,12 @@
       const recordLabel = isMarkdown ? "Markdown" : "PDF";
       const recordName = record && record.name ? record.name : `${recordLabel} ${currentClassPdfIndex + 1}`;
       const slideInfo = isMarkdown && currentMarkdownSlides.length > 0
-        ? ` • Slide ${currentMarkdownSlideIndex + 1} of ${currentMarkdownSlides.length}`
+        ? ` - Slide ${currentMarkdownSlideIndex + 1} of ${currentMarkdownSlides.length}`
         : "";
 
       if (info) {
         info.textContent = total > 0
-          ? `Lesson ${currentClassPdfIndex + 1} of ${total} • ${recordName}${slideInfo}`
+          ? `Lesson ${currentClassPdfIndex + 1} of ${total} - ${recordName}${slideInfo}`
           : "";
       }
 
@@ -2945,16 +3175,14 @@
       const markdownInput = document.getElementById("markdownFileInput");
       if (markdownInput) markdownInput.value = "";
       document.getElementById("lessonPage").classList.remove("presentation-mode");
-      if (currentPdfUrl) {
-        URL.revokeObjectURL(currentPdfUrl);
-      }
       currentClass = null;
       currentHour = null;
-      currentPdfUrl = null;
       currentClassPdfRecords = [];
       currentClassPdfIndex = 0;
       currentMarkdownSlides = [];
       currentMarkdownSlideIndex = 0;
+      activeBehaviorWarnings = {};
+      updateBehaviorWarningBanner();
       setAnnotationMode(false);
       clearAnnotations(false);
       initStartScreen();
@@ -3041,9 +3269,9 @@
         currentMarkdownSlideIndex = restoredSlideIndex;
         showCurrentLessonPdf();
         updatePdfNavigationState();
-        if (session.presentationMode) {
-          hideControls();
-        }
+        // Always restore with controls visible so a saved presentation session
+        // cannot reopen into a blank-looking lesson view with no obvious exit.
+        showControls();
         sessionRestoreInProgress = false;
         persistLessonSession();
         return true;
@@ -3065,9 +3293,72 @@
       cancelBehavior();
     }
 
-    function selectBehavior(type, category) {
+    function getRecommendationForPoints(points) {
+      if (points >= 10) return "Admin referral";
+      if (points >= 7) return "Parent contact";
+      if (points >= 5) return "Reflection sheet";
+      if (points >= 3) return "Stay after class";
+      return "";
+    }
+
+    function getTodayCurrentHourLogs() {
+      if (!currentHour) {
+        return [];
+      }
+
+      const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
+      const today = new Date().toISOString().split("T")[0];
+      return logs.filter((log) => log.timestamp.split("T")[0] === today && log.hour === currentHour);
+    }
+
+    function getWarningLabel(category) {
+      if (category === "Out of Seat") return "Seat";
+      if (category === "Ignored Directions") return "Directions";
+      return String(category || "Behavior");
+    }
+
+    function updateBehaviorWarningBanner() {
+      const banner = document.getElementById("warningBanner");
+      if (!banner) {
+        return;
+      }
+
+      const counts = getTodayCurrentHourLogs()
+        .filter((log) => log.type === "negative")
+        .reduce((totals, log) => {
+          const category = String(log.category || "").trim();
+          if (!category) {
+            return totals;
+          }
+          totals[category] = (totals[category] || 0) + 1;
+          return totals;
+        }, {});
+
+      activeBehaviorWarnings = Object.fromEntries(
+        Object.entries(counts)
+          .filter(([, count]) => count >= 3)
+          .sort((a, b) => a[0].localeCompare(b[0]))
+      );
+
+      const warningCategories = Object.keys(activeBehaviorWarnings);
+      if (warningCategories.length === 0) {
+        banner.innerHTML = "";
+        banner.classList.add("hidden");
+        return;
+      }
+
+      banner.innerHTML = warningCategories
+        .map((category) => `<div class="warning-banner-chip">${getWarningLabel(category)} Warning Active (+1 severity)</div>`)
+        .join("");
+      banner.classList.remove("hidden");
+    }
+
+    function selectBehavior(type, category, points = null) {
       selectedBehaviorType = type;
       selectedBehavior = category;
+      const basePoints = Math.max(0, Number(points ?? 1) || 0);
+      const warningIncrement = type === "negative" && activeBehaviorWarnings[category] ? 1 : 0;
+      selectedBehaviorPoints = type === "negative" ? basePoints + warningIncrement : 0;
       document.getElementById("behaviorSelector").style.display = "none";
       document.getElementById("studentSelector").style.display = "block";
       populateStudentGrid();
@@ -3158,12 +3449,14 @@
         hour: currentHour,
         student: studentName,
         type: selectedBehaviorType,
-        category: selectedBehavior
+        category: selectedBehavior,
+        points: selectedBehaviorType === "negative" ? selectedBehaviorPoints : 0
       };
 
       const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
       logs.push(entry);
       localStorage.setItem(logKey, JSON.stringify(logs));
+      updateBehaviorWarningBanner();
 
       if (selectedBehaviorType === "positive") {
         showPositiveBanner(studentName, selectedBehavior);
@@ -3204,6 +3497,7 @@
     function cancelBehavior() {
       selectedBehavior = null;
       selectedBehaviorType = null;
+      selectedBehaviorPoints = 0;
       document.getElementById("behaviorSelector").style.display = "block";
       document.getElementById("studentSelector").style.display = "none";
     }
@@ -3218,24 +3512,86 @@
     }
 
     function populateLogEntries() {
+      const title = document.getElementById("logModalTitle");
+      const summary = document.getElementById("logSummary");
       const container = document.getElementById("logEntries");
       const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
       const today = new Date().toISOString().split("T")[0];
-      const todayLogs = logs.filter((log) => log.timestamp.split("T")[0] === today);
+      const todayLogs = logs.filter((log) => log.timestamp.split("T")[0] === today && log.hour === currentHour);
+
+      if (title) {
+        title.textContent = currentHour ? `${currentHour} Today's Log` : "Today's Log";
+      }
 
       if (todayLogs.length === 0) {
-        container.innerHTML = '<div class="empty-log">No behaviors logged today.</div>';
+        if (summary) {
+          summary.innerHTML = "";
+        }
+        container.innerHTML = `<div class="empty-log">No behaviors logged today for ${currentHour || "this hour"}.</div>`;
         return;
+      }
+
+      const negativeTotals = todayLogs
+        .filter((log) => log.type === "negative")
+        .reduce((totals, log) => {
+          const student = String(log.student || "");
+          const points = Math.max(0, Number(log.points || 0));
+          if (!student) {
+            return totals;
+          }
+          totals[student] = (totals[student] || 0) + points;
+          return totals;
+        }, {});
+
+      const recommendations = Object.entries(negativeTotals)
+        .map(([student, points]) => ({
+          student,
+          points,
+          recommendation: getRecommendationForPoints(points)
+        }))
+        .filter((entry) => entry.recommendation)
+        .sort((a, b) => b.points - a.points || a.student.localeCompare(b.student));
+
+      if (summary) {
+        const negativePointTotal = Object.values(negativeTotals).reduce((sum, points) => sum + points, 0);
+        const pointLines = Object.entries(negativeTotals)
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+          .map(([student, points]) => `<div class="log-summary-line">${student}: ${points} point${points === 1 ? "" : "s"}</div>`)
+          .join("");
+        const recommendationLines = recommendations.length > 0
+          ? recommendations.map((entry) => `<div class="log-summary-line">${entry.student}: ${entry.recommendation} (${entry.points} points)</div>`).join("")
+          : '<div class="log-summary-line">No students have reached a recommendation threshold yet.</div>';
+
+        summary.innerHTML = `
+          <div class="log-summary-card">
+            <div class="log-summary-title">Current Hour</div>
+            <div class="log-summary-line">${currentHour || "Unknown Hour"}${currentClass ? ` • ${currentClass}` : ""}</div>
+            <div class="log-summary-line">${todayLogs.length} entr${todayLogs.length === 1 ? "y" : "ies"} today</div>
+            <div class="log-summary-line">${negativePointTotal} total negative point${negativePointTotal === 1 ? "" : "s"}</div>
+          </div>
+          <div class="log-summary-card">
+            <div class="log-summary-title">Negative Point Totals</div>
+            ${pointLines || '<div class="log-summary-line">No negative points logged for this hour today.</div>'}
+          </div>
+          <div class="log-summary-card">
+            <div class="log-summary-title">Recommendations</div>
+            ${recommendationLines}
+          </div>
+        `;
       }
 
       container.innerHTML = todayLogs.map((log) => {
         const time = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         const entryClass = log.type === "positive" ? "log-entry-positive" : "log-entry-negative";
+        const points = Math.max(0, Number(log.points || 0));
+        const pointsBadge = log.type === "negative"
+          ? `<span class="log-entry-points">${points} point${points === 1 ? "" : "s"}</span>`
+          : "";
         return `
           <div class="log-entry ${entryClass}">
             <div class="log-entry-time">${time} • ${log.hour}</div>
             <div class="log-entry-name">${log.student}</div>
-            <div class="log-entry-category">${log.category}</div>
+            <div class="log-entry-category">${log.category}${pointsBadge}</div>
           </div>
         `;
       }).join("");
@@ -3875,7 +4231,7 @@
 
       document.getElementById("negativeCustomInput").addEventListener("keypress", (event) => {
         if (event.key === "Enter" && event.target.value.trim()) {
-          selectBehavior("negative", event.target.value.trim());
+          selectBehavior("negative", event.target.value.trim(), 1);
           event.target.value = "";
         }
       });
